@@ -27,8 +27,8 @@ bool intersectTriangle(const glm::vec3& orig, const glm::vec3& dir, const glm::v
 bool intersectTriangle2(const glm::vec3& orig, const glm::vec3& dir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, float& t, float& u, float& v);
 
 // settings
-const unsigned int SCR_WIDTH = 500;
-const unsigned int SCR_HEIGHT = 500;
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 1000;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -56,7 +56,6 @@ glm::mat4 model;
 // model
 Model bunnyModel;
 Model bunnyOverLineModel;
-Model bunnyOverPointModel;
 bool bunnyOver = false;
 
 struct MODE
@@ -80,6 +79,13 @@ struct KeyLock
 MODE mode;
 MODE tmpMode = mode;
 KeyLock keyLock;
+
+bool selectFaceValid = false;
+VertexData selectFace[3];
+unsigned int selectFaceIndex[3];
+bool selectPointValid = false;
+VertexData selectPoint;
+unsigned int selectPointIndex;
 
 int main()
 {
@@ -128,6 +134,7 @@ int main()
     ShaderProgram bunnyShader;
     ShaderProgram bunnyLineShader;
     ShaderProgram bunnyOverShader;
+    ShaderProgram bunnyOverPointShader;
     ShaderProgram bunnyPointShader;
     ShaderProgram lightShader;
 
@@ -147,6 +154,10 @@ int main()
         #pragma omp section
         {
             bunnyOverShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_over_fragment.glsl");
+        }
+        #pragma omp section
+        {
+            bunnyOverPointShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_over_point_fragment.glsl");
         }
         #pragma omp section
         {
@@ -177,15 +188,12 @@ int main()
         }
         #pragma omp section
         {
-            bunnyOverPointModel = Model(path);
-        }
-        #pragma omp section
-        {
             lightModel = Model("assets/model/sphere.ply");
         };
     };
 
-
+    glfwWindowHint(GLFW_SAMPLES, 8);
+    glEnable(GL_MULTISAMPLE);
 
     // render loop
     // -----------
@@ -230,17 +238,22 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.0f));
         model = glm::scale(model, glm::vec3(10.5f, 10.5f, 10.5f));
 
-        if (bunnyOver)
+        if (mode.selected)
         {
-            glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
-            // don't forget to enable shader before setting uniforms
-            bunnyOverShader.use();
+            if (selectFaceValid)
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
+                glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
+                glPolygonOffset(-1.6f,-1.6f);//设置多边形偏移量
+                // don't forget to enable shader before setting uniforms
+                bunnyOverShader.use();
 
-            bunnyOverShader.setValue("projection", projection);
-            bunnyOverShader.setValue("view", view);
-            // render the loaded model
-            bunnyOverShader.setValue("model", model);
-            bunnyOverLineModel.render(&bunnyOverShader);
+                bunnyOverShader.setValue("projection", projection);
+                bunnyOverShader.setValue("view", view);
+                // render the loaded model
+                bunnyOverShader.setValue("model", model);
+                bunnyOverLineModel.render(&bunnyOverShader);
+            }
         }
 
         if (mode.fill)
@@ -282,7 +295,7 @@ int main()
             lightModel.render(&lightShader);
         }
 
-        if (mode.line || mode.selected)
+        if (mode.line)
         {
             glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);//将绘制模式改为线
             glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
@@ -403,6 +416,7 @@ void processInput(GLFWwindow *window)
             keyLock.selected = true;
             mode.selected = true;
         }
+        mouse_select(window, lastX, lastY);
     }
     else
     {
@@ -498,7 +512,6 @@ void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
     // 遍历每个面
     for (auto& mesh : bunnyModel.getMeshes())
     {
-        std::cout << "mesh size: " << mesh.getFaces().size() << std::endl;
         #pragma omp parallel
         #pragma omp for
         for (auto& face : mesh.getFaces())
@@ -522,16 +535,62 @@ void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
             if (!bunnyOver)
                 bunnyOver = true;
 
+            selectFaceValid = true;
             auto overMesh = bunnyOverLineModel.getMeshes()[0];
             overMesh.setIndices({findFace.v1, findFace.v2, findFace.v3});
+            selectFace[0] = mesh.getVertices()[findFace.v1];
+            selectFace[1] = mesh.getVertices()[findFace.v2];
+            selectFace[2] = mesh.getVertices()[findFace.v3];
+            selectFaceIndex[0] = findFace.v1;
+            selectFaceIndex[1] = findFace.v2;
+            selectFaceIndex[2] = findFace.v3;
 
+            auto point = camera.Position + ray_dir * minT;
+            auto pointView = projection * view * glm::vec4(point, 1.0f);
 
-            std::cout << "find face: " << findFace.v1 << " " << findFace.v2 << " " << findFace.v3 << std::endl;
-            std::cout << "t: " << minT << std::endl;
+            auto point0 = mesh.getVertices()[findFace.v1].position;
+            auto point0View = projection * view * model * glm::vec4(point0, 1.0f);
+
+            auto point1 = mesh.getVertices()[findFace.v2].position;
+            auto point1View = projection * view * model * glm::vec4(point1, 1.0f);
+
+            auto point2 = mesh.getVertices()[findFace.v3].position;
+            auto point2View = projection * view * model * glm::vec4(point2, 1.0f);
+
+            auto len0 = glm::length(pointView - point0View);
+            auto len1 = glm::length(pointView - point1View);
+            auto len2 = glm::length(pointView - point2View);
+
+            auto minLen = std::min(len0, std::min(len1, len2));
+
+            constexpr float epsilon = 0.01f;
+
+            if (minLen == len0 && minLen <= epsilon)
+            {
+                selectPointValid = true;
+                selectPoint = mesh.getVertices()[findFace.v1];
+                selectPointIndex = findFace.v1;
+            }
+            else if (minLen == len1 && minLen <= epsilon)
+            {
+                selectPointValid = true;
+                selectPoint = mesh.getVertices()[findFace.v2];
+                selectPointIndex = findFace.v2;
+            }
+            else if (minLen == len2 && minLen <= epsilon)
+            {
+                selectPointValid = true;
+                selectPoint = mesh.getVertices()[findFace.v3];
+                selectPointIndex = findFace.v3;
+            }
+            else
+            {
+                selectPointValid = false;
+            }
         }
         else
         {
-            std::cout << "not find face" << std::endl;
+            selectFaceValid = false;
         }
     }
 
@@ -664,36 +723,41 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        if (!mouse_left_button && mode.selected)
-            mouse_select(window, lastX, lastY);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        {
+            if (selectPointValid)
+                std::cout << "select point (" << selectPointIndex << "): " << selectPoint.position.x << ", " << selectPoint.position.y << ", " << selectPoint.position.z << std::endl;
+            else if(selectFaceValid)
+            {
+                std::cout << "select face: " << std::endl;
+                std::cout << "\t point (" << selectFaceIndex[0] << "): " << selectFace[0].position.x << ", " << selectFace[0].position.y << ", " << selectFace[0].position.z << std::endl;
+                std::cout << "\t point (" << selectFaceIndex[1] << "): " << selectFace[1].position.x << ", " << selectFace[1].position.y << ", " << selectFace[1].position.z << std::endl;
+                std::cout << "\t point (" << selectFaceIndex[2] << "): " << selectFace[2].position.x << ", " << selectFace[2].position.y << ", " << selectFace[2].position.z << std::endl;
+            }
+            else
+            {
+                std::cout << "select nothing" << std::endl;
+            }
+
+        }
         mouse_left_button = true;
-        std::cout << "Left button pressed" << std::endl;
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
         mouse_right_button = true;
-        std::cout << "Right button pressed" << std::endl;
     }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS)
-    {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
         mouse_middle_button = true;
-        std::cout << "Middle button pressed" << std::endl;
     }
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-    {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         mouse_left_button = false;
-        std::cout << "Left button released" << std::endl;
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
-    {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
         mouse_right_button = false;
-        std::cout << "Right button released" << std::endl;
     }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE)
-    {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
         mouse_middle_button = false;
-        std::cout << "Middle button released" << std::endl;
     }
 }
 

@@ -87,6 +87,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     for (size_t i = 0; i < mesh->mNumVertices; i++)
     {
         VertexData vertexData;  // 顶点数据
+
         // 顶点位置
         glm::vec3 position;
         position.x = mesh->mVertices[i].x;

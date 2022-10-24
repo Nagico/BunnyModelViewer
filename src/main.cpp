@@ -12,6 +12,7 @@
 #include "util/ShaderProgram.h"
 #include "util/Camera.h"
 #include "util/Model.h"
+#include "util/RayPicker.h"
 
 #include <iostream>
 #include <thread>
@@ -56,7 +57,8 @@ glm::mat4 model;
 // model
 Model bunnyModel;
 Model bunnyOverLineModel;
-bool bunnyOver = false;
+
+RayPicker rayPicker;
 
 struct MODE
 {
@@ -79,13 +81,6 @@ struct KeyLock
 MODE mode;
 MODE tmpMode = mode;
 KeyLock keyLock;
-
-bool selectFaceValid = false;
-VertexData selectFace[3];
-unsigned int selectFaceIndex[3];
-bool selectPointValid = false;
-VertexData selectPoint;
-unsigned int selectPointIndex;
 
 int main()
 {
@@ -240,7 +235,7 @@ int main()
 
         if (mode.selected)
         {
-            if (selectFaceValid)
+            if (rayPicker.selectFaceValid)
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
                 glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
@@ -472,251 +467,14 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
 {
-    // 2D屏幕坐标
-    auto xpos = static_cast<float>(mouse_xpos);
-    auto ypos = static_cast<float>(mouse_ypos);
-
-    // NDC标准化坐标
     int width, height;
     glfwGetWindowSize(window, &width, &height);
+    rayPicker.rayPick(
+            bunnyModel.getMeshes()[0], camera.Position,
+            model, view, projection, (float)mouse_xpos, (float)mouse_ypos, width, height);
 
-    float x = (2.0f * xpos) / width - 1.0f;
-    float y = 1.0f - (2.0f * ypos) / height;
-    float z = 1.0f;  //  z = 1.0f 代表当前将鼠标的位置投影到远裁剪平面，如果设z的坐标为-1则代表将当前投影到近裁剪平面上
-    auto ray_nds = glm::vec3(x, y, z);
-
-    // 裁剪齐次坐标
-    auto ray_clip = glm::vec4(ray_nds.x, ray_nds.y, ray_nds.z, 1.0f);
-
-    // 视点坐标
-    // 投影矩阵的逆矩阵左乘点的裁剪坐标
-    auto ray_eye = glm::inverse(projection) * ray_clip;
-
-    // 世界坐标
-    auto ray_wor = glm::inverse(view) * ray_eye;
-
-    if (ray_wor.w != 0)
-    {
-        ray_wor = ray_wor / ray_wor.w;
-    }
-
-
-    // 从摄像机位置发出一条射线
-    auto ray_dir = glm::normalize(glm::vec3(ray_wor.x, ray_wor.y, ray_wor.z) - camera.Position);
-
-    float minT = 1000.f;
-    Face findFace;
-
-    float u, v, t;
-
-    // 遍历每个面
-    for (auto& mesh : bunnyModel.getMeshes())
-    {
-        #pragma omp parallel
-        #pragma omp for
-        for (auto& face : mesh.getFaces())
-        {
-            auto v0 = mesh.getVertices()[face.v1];
-            auto v1 = mesh.getVertices()[face.v2];
-            auto v2 = mesh.getVertices()[face.v3];
-
-            if (intersectTriangle2(camera.Position, ray_dir, v0.position, v1.position, v2.position, t, u, v))
-            {
-                if (t > 0 && t < minT)
-                {
-                    minT = t;
-                    findFace = face;
-                }
-            }
-        }
-
-        if (minT < 1000.f)
-        {
-            if (!bunnyOver)
-                bunnyOver = true;
-
-            selectFaceValid = true;
-            auto overMesh = bunnyOverLineModel.getMeshes()[0];
-            overMesh.setIndices({findFace.v1, findFace.v2, findFace.v3});
-            selectFace[0] = mesh.getVertices()[findFace.v1];
-            selectFace[1] = mesh.getVertices()[findFace.v2];
-            selectFace[2] = mesh.getVertices()[findFace.v3];
-            selectFaceIndex[0] = findFace.v1;
-            selectFaceIndex[1] = findFace.v2;
-            selectFaceIndex[2] = findFace.v3;
-
-            auto point = camera.Position + ray_dir * minT;
-            auto pointView = projection * view * glm::vec4(point, 1.0f);
-
-            auto point0 = mesh.getVertices()[findFace.v1].position;
-            auto point0View = projection * view * model * glm::vec4(point0, 1.0f);
-
-            auto point1 = mesh.getVertices()[findFace.v2].position;
-            auto point1View = projection * view * model * glm::vec4(point1, 1.0f);
-
-            auto point2 = mesh.getVertices()[findFace.v3].position;
-            auto point2View = projection * view * model * glm::vec4(point2, 1.0f);
-
-            auto len0 = glm::length(pointView - point0View);
-            auto len1 = glm::length(pointView - point1View);
-            auto len2 = glm::length(pointView - point2View);
-
-            auto minLen = std::min(len0, std::min(len1, len2));
-
-            constexpr float epsilon = 0.01f;
-
-            if (minLen == len0 && minLen <= epsilon)
-            {
-                selectPointValid = true;
-                selectPoint = mesh.getVertices()[findFace.v1];
-                selectPointIndex = findFace.v1;
-            }
-            else if (minLen == len1 && minLen <= epsilon)
-            {
-                selectPointValid = true;
-                selectPoint = mesh.getVertices()[findFace.v2];
-                selectPointIndex = findFace.v2;
-            }
-            else if (minLen == len2 && minLen <= epsilon)
-            {
-                selectPointValid = true;
-                selectPoint = mesh.getVertices()[findFace.v3];
-                selectPointIndex = findFace.v3;
-            }
-            else
-            {
-                selectPointValid = false;
-            }
-        }
-        else
-        {
-            selectFaceValid = false;
-        }
-    }
-
-}
-
-float getArea(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2)
-{
-    auto a = glm::length(v1 - v0);
-    auto b = glm::length(v2 - v1);
-    auto c = glm::length(v0 - v2);
-
-    auto p = (a + b + c) / 2.0f;
-
-    return sqrt(p * (p - a) * (p - b) * (p - c));
-}
-
-bool intersectTriangle(const glm::vec3& orig,
-                        const glm::vec3& dir,
-                        const glm::vec3& v0,
-                        const glm::vec3& v1,
-                        const glm::vec3& v2,
-                        float& t,
-                        float& u,
-                        float& v)
-{
-    auto v0Model = glm::vec3(model * glm::vec4(v0, 1.0f));
-    auto v1Model = glm::vec3(model * glm::vec4(v1, 1.0f));
-    auto v2Model = glm::vec3(model * glm::vec4(v2, 1.0f));
-
-    // Ax+By+Cz+D=0
-    auto A = v0Model.y * (v2Model.z - v1Model.z) + v1Model.y * (v0Model.z - v2Model.z) + v2Model.y * (v1Model.z - v0Model.z);
-    auto B = v0Model.z * (v2Model.x - v1Model.x) + v1Model.z * (v0Model.x - v2Model.x) + v2Model.z * (v1Model.x - v0Model.x);
-    auto C = v0Model.x * (v2Model.y - v1Model.y) + v1Model.x * (v0Model.y - v2Model.y) + v2Model.x * (v1Model.y - v0Model.y);
-    auto D = -(v0Model.x * (v2Model.y * v1Model.z - v1Model.y * v2Model.z) + v1Model.x * (v0Model.y * v2Model.z - v2Model.y * v0Model.z) + v2Model.x * (v1Model.y * v0Model.z - v0Model.y * v1Model.z));
-
-    auto point1 = orig;
-    auto point2 = orig + dir;
-
-    // 线段与平面的交点
-    t = -(A * point1.x + B * point1.y + C * point1.z + D) / (A * (point2.x - point1.x) + B * (point2.y - point1.y) + C * (point2.z - point1.z));
-    auto point = point1 + t * (point2 - point1);
-
-    if (t < 0.001f)
-    {
-        return false;
-    }
-
-    // 判断交点是否在三角形内
-    auto s012 = getArea(v0Model, v1Model, v2Model);
-    auto s01p = getArea(v0Model, v1Model, point);
-    auto s02p = getArea(v0Model, v2Model, point);
-    auto s12p = getArea(v1Model, v2Model, point);
-
-    auto s = s01p + s02p + s12p;
-    auto res = (s - s012) < 0.001f;
-
-    return res;
-}
-
-/// 射线三角形检测
-/// \param orig 射线起点
-/// \param dir 射线方向
-/// \param v0 三角形顶点0
-/// \param v1 三角形顶点1
-/// \param v2 三角形顶点2
-/// \param t 交点距离起点的距离
-/// \param u 交点距离v0的距离
-/// \param v 交点距离v1的距离
-/// \return 是否相交
-/// 根据上面代码求出的t,u,v的值，交点的最终坐标可以用下面两种方法计算
-/// orig + dir * t
-/// (1 - u - v) * v0 + u * v1 + v * v2Model
-bool intersectTriangle2(const glm::vec3& orig,
-                       const glm::vec3& dir,
-                       const glm::vec3& v0,
-                       const glm::vec3& v1,
-                       const glm::vec3& v2,
-                       float& t,
-                       float& u,
-                       float& v)
-{
-    constexpr float EPSILON = 0.0000001f;
-
-    auto v0Model = glm::vec3(model * glm::vec4(v0, 1.0f));
-    auto v1Model = glm::vec3(model * glm::vec4(v1, 1.0f));
-    auto v2Model = glm::vec3(model * glm::vec4(v2, 1.0f));
-
-    // 计算三角形的法线
-    auto E1 = v1Model - v0Model;  // 三角形的边
-    auto E2 = v2Model - v0Model;
-    auto P = glm::cross(dir, E2);
-
-    auto det = glm::dot(E1, P);
-
-    // 如果det=0，说明射线与三角形平行，不相交
-    if (det > -EPSILON && det < EPSILON) {
-        return false;
-    }
-
-
-    auto T = orig - v0Model;
-    // 计算u
-    u = glm::dot(T, P);
-    if (u < EPSILON || u - det > -EPSILON)
-    {
-        return false;
-    }
-
-    auto Q = glm::cross(T, E1);
-
-    // 计算v
-    v = glm::dot(dir, Q);
-    if (v < EPSILON || u + v - det > -EPSILON)
-    {
-        return false;
-    }
-
-    // 计算t
-    t = glm::dot(E2, Q);
-
-    auto fInvDet = 1.0f / det;
-    t *= fInvDet;
-    u *= fInvDet;
-    v *= fInvDet;
-
-    return true;
+    if (rayPicker.selectFaceValid)
+        bunnyOverLineModel.getMeshes()[0].setIndices({rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]});
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -725,14 +483,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     {
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         {
-            if (selectPointValid)
-                std::cout << "select point (" << selectPointIndex << "): " << selectPoint.position.x << ", " << selectPoint.position.y << ", " << selectPoint.position.z << std::endl;
-            else if(selectFaceValid)
+            if (rayPicker.selectPointValid)
+                std::cout << "select point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x << ", " << rayPicker.selectPoint.position.y << ", " << rayPicker.selectPoint.position.z << std::endl;
+            else if(rayPicker.selectFaceValid)
             {
                 std::cout << "select face: " << std::endl;
-                std::cout << "\t point (" << selectFaceIndex[0] << "): " << selectFace[0].position.x << ", " << selectFace[0].position.y << ", " << selectFace[0].position.z << std::endl;
-                std::cout << "\t point (" << selectFaceIndex[1] << "): " << selectFace[1].position.x << ", " << selectFace[1].position.y << ", " << selectFace[1].position.z << std::endl;
-                std::cout << "\t point (" << selectFaceIndex[2] << "): " << selectFace[2].position.x << ", " << selectFace[2].position.y << ", " << selectFace[2].position.z << std::endl;
+                for (int i = 0; i < 3; i++)
+                {
+                    std::cout << "\t point (" << rayPicker.selectFaceIndex[i] << "): " << rayPicker.selectFace[i].position.x << ", " << rayPicker.selectFace[i].position.y << ", " << rayPicker.selectFace[i].position.z << std::endl;
+                }
+
             }
             else
             {

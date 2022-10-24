@@ -26,9 +26,7 @@ struct Texture
 
 struct Face
 {
-    unsigned int v1;
-    unsigned int v2;
-    unsigned int v3;
+    unsigned int vertex[3];
 };
 
 struct MeshInfo
@@ -56,6 +54,9 @@ public:
          const vector<Face> &faces,
          const vector<Texture> &textures,
          const MeshInfo &meshInfo);
+
+    Mesh();
+
     ~Mesh();
 
 

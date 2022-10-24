@@ -140,3 +140,7 @@ const MeshInfo &Mesh::getMeshInfo() const {
 const vector<Face> &Mesh::getFaces() const {
     return m_faces;
 }
+
+Mesh::Mesh() {
+
+}

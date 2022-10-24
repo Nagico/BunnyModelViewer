@@ -67,11 +67,11 @@ add_executable(
 #        src/MainRender.h
 #        src/MainWindow.cpp
 #        src/MainWindow.h
-        src/util/Camera.cpp)
+        src/util/Camera.cpp src/util/RayPicker.cpp src/util/RayPicker.h)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64")
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")
-        target_link_libraries(test glfw3 opengl32 assimp-vc143-mt)
+        target_link_libraries(test glfw3 opengl32 assimp-vc143-mt OpenCL)
     elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
         target_link_libraries(test glfw3 opengl32 libassimp)
     else()

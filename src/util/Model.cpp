@@ -137,9 +137,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         if (face.mNumIndices == 3)  // 只处理三角形面
         {
             Face f{};  // 面数据
-            f.v1 = face.mIndices[0];
-            f.v2 = face.mIndices[1];
-            f.v3 = face.mIndices[2];
+            for (int j = 0; j < 3; j++)
+                f.vertex[j] = face.mIndices[j];
             faces.push_back(f);  // 将面数据添加到面数组中
         }
         else

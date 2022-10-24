@@ -15,7 +15,6 @@
 #include "util/RayPicker.h"
 
 #include <iostream>
-#include <thread>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -23,9 +22,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void mouse_select(GLFWwindow* window, double xpos, double ypos);
-
-bool intersectTriangle(const glm::vec3& orig, const glm::vec3& dir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, float& t, float& u, float& v);
-bool intersectTriangle2(const glm::vec3& orig, const glm::vec3& dir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, float& t, float& u, float& v);
 
 // settings
 const unsigned int SCR_WIDTH = 1000;
@@ -79,7 +75,6 @@ struct KeyLock
 };
 
 MODE mode;
-MODE tmpMode = mode;
 KeyLock keyLock;
 
 int main()
@@ -170,6 +165,7 @@ int main()
     Model lightModel;
 
     auto path = "assets/model/bunny_texture/bunny.obj";
+    //auto path = "assets/model/plane.ply";
     #pragma omp parallel
     #pragma omp sections
     {
@@ -187,8 +183,26 @@ int main()
         };
     };
 
+    // super scale
     glfwWindowHint(GLFW_SAMPLES, 8);
     glEnable(GL_MULTISAMPLE);
+
+    float selectPointVertices[] = {
+            -0.5f, -0.5f, 0.0f, // left
+            0.5f, -0.5f, 0.0f, // right
+            0.0f,  0.5f, 0.0f  // top
+    };
+
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(selectPointVertices), selectPointVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     // render loop
     // -----------
@@ -213,7 +227,7 @@ int main()
         // -----
         std::string title;
         if (mode.selected) title += "[Select] ";
-        title += "LearnOpenGL -";
+        title += "LearnOpenGL - ";
         if (mode.fill) title += "Fill ";
         if (mode.line) title += "Line ";
         if (mode.point) title += "Point ";
@@ -235,7 +249,28 @@ int main()
 
         if (mode.selected)
         {
-            if (rayPicker.selectFaceValid)
+            if (rayPicker.selectPointValid)
+            {
+                auto point = rayPicker.selectPoint.position;
+                selectPointVertices[0] = point.x;
+                selectPointVertices[1] = point.y;
+                selectPointVertices[2] = point.z;
+
+                glBindBuffer(GL_ARRAY_BUFFER, VBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(selectPointVertices), selectPointVertices);
+
+
+                glPointSize(5.0f);
+                bunnyOverPointShader.use();
+                bunnyOverPointShader.setValue("projection", projection);
+                bunnyOverPointShader.setValue("view", view);
+                bunnyOverPointShader.setValue("model", model);
+
+                glBindVertexArray(VAO);
+                glDrawArrays(GL_POINTS, 0, 1);
+                glBindVertexArray(0);
+            }
+            else if (rayPicker.selectFaceValid)
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
                 glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移

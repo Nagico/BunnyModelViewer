@@ -2,6 +2,7 @@
 // Created by co on 2022/10/24.
 //
 
+#include <iostream>
 #include "RayPicker.h"
 
 void RayPicker::rayPick(const Mesh& mesh, const glm::vec3 cameraPos,
@@ -194,6 +195,7 @@ void RayPicker::checkFaces()
     }
     else
     {
+        selectPointValid = false;
         selectFaceValid = false;
     }
 }
@@ -208,7 +210,7 @@ void RayPicker::checkSelectPoint()
     for (int i = 0; i < 3; i++)
     {
         auto pointTriangleView = m_projection * m_view * m_model * glm::vec4(selectFace[i].position, 1.0f);
-        len[i] = glm::length(pointTriangleView - pointView);
+        len[i] = glm::length(glm::vec2(pointTriangleView.x, pointTriangleView.y) - glm::vec2(pointView.x, pointView.y));
         if (len[i] < minLen && len[i] <= POINT_PICK_EPSILON)
         {
             minLen = len[i];

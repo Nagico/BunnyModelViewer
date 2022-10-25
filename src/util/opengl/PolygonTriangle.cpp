@@ -24,6 +24,7 @@ void PolygonTriangle::removeIndices(unsigned int index0, unsigned int index1, un
 }
 
 void PolygonTriangle::draw() {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     for (int i = 0; i != m_indices.size(); i += 3)
         glDrawArrays(GL_TRIANGLES, m_indices[i], 3);
 }

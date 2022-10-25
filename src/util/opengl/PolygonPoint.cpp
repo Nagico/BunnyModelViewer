@@ -22,8 +22,10 @@ void PolygonPoint::removeIndices(unsigned int index0, unsigned int index1, unsig
 }
 
 void PolygonPoint::draw() {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     for(auto& it : m_indices)
         glDrawArrays(GL_POINTS, it, 1);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 bool PolygonPoint::in(unsigned int index0, unsigned int index1, unsigned int index2) {

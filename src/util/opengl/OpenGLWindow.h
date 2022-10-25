@@ -1,9 +1,9 @@
 #ifndef OPENGLWINDOW_H
 #define OPENGLWINDOW_H
 #include <string>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/vec2.hpp>
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+#include "glm/vec2.hpp"
 
 using std::string;
 class OpenGLWindow

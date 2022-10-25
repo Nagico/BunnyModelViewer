@@ -1,8 +1,8 @@
 #ifndef SHADERPROGRAM_H
 #define SHADERPROGRAM_H
 #include <string>
-#include <glad/glad.h>
-#include <glm/matrix.hpp>
+#include "glad/glad.h"
+#include "glm/matrix.hpp"
 
 using std::string;
 class ShaderProgram

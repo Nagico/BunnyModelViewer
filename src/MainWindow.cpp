@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 #include "MainRender.h"
-#include "util/Camera.h"
+#include "util/opengl/Camera.h"
 #include <iostream>
 
 MainWindow::MainWindow()

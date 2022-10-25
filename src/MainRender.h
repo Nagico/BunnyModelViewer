@@ -1,7 +1,7 @@
 #ifndef MAINRENDER_H
 #define MAINRENDER_H
-#include "util/OpenGLRender.h"
-#include "util/ShaderProgram.h"
+#include "util/opengl/OpenGLRender.h"
+#include "util/opengl/ShaderProgram.h"
 #include <glm/matrix.hpp>
 
 class Model;

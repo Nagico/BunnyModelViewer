@@ -1,6 +1,6 @@
 ﻿#include "Mesh.h"
 #include "ShaderProgram.h"
-#include <glad/glad.h>
+#include "glad/glad.h"
 #include <iostream>
 #include <utility>
 

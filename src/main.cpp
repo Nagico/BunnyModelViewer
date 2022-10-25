@@ -1,42 +1,27 @@
-﻿#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
-
-#include <glad/glad.h>
+﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "util/ShaderProgram.h"
-#include "util/Camera.h"
-#include "util/Model.h"
+#include "util/opengl/ShaderProgram.h"
+#include "util/opengl/Camera.h"
+#include "util/opengl/Model.h"
 #include "util/RayPicker.h"
+#include "util/event/Mouse.h"
 
 #include <iostream>
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void mouse_select(GLFWwindow* window, double xpos, double ypos);
 
 // settings
-const unsigned int SCR_WIDTH = 1000;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 500;
+const unsigned int SCR_HEIGHT = 500;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-
-// mouse
-auto mouse_left_button = false;
-auto mouse_middle_button = false;
-auto mouse_right_button = false;
-bool firstMouse = true;
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
 
 // timing
 float deltaTime = 0.0f;
@@ -77,6 +62,8 @@ struct KeyLock
 MODE mode;
 KeyLock keyLock;
 
+GLFWwindow* window;
+
 int main()
 {
     // glfw: initialize and configure
@@ -92,7 +79,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -100,10 +87,8 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
+    Mouse::init(window);
 
     // tell GLFW to capture our mouse
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -204,13 +189,48 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    EventHandler::get().addListener([](const event::Mouse::ClickEvent<MouseButton::LEFT>& event) {
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            if (rayPicker.selectPointValid)
+                std::cout << "select point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x
+                          << ", " << rayPicker.selectPoint.position.y << ", " << rayPicker.selectPoint.position.z
+                          << std::endl;
+            else if (rayPicker.selectFaceValid) {
+                std::cout << "select face: " << std::endl;
+                for (int i = 0; i < 3; i++) {
+                    std::cout << "\t point (" << rayPicker.selectFaceIndex[i] << "): "
+                              << rayPicker.selectFace[i].position.x << ", " << rayPicker.selectFace[i].position.y
+                              << ", " << rayPicker.selectFace[i].position.z << std::endl;
+                }
+
+            } else {
+                std::cout << "select nothing" << std::endl;
+            }
+
+        }
+    });
+
+    EventHandler::get().addListener([](const event::Mouse::MoveEvent &event) {
+        if (Mouse::state[MouseButton::LEFT]){
+            float sensitivity = 0.01f * camera.Zoom; // change this value to your liking
+            auto pos = event.offset * sensitivity;
+            camera.ProcessMouseMovement(-pos.x, -pos.y);
+        }
+    });
+
+    EventHandler::get().addListener([](const event::Mouse::ScrollEvent &event) {
+        float sensitivity = 1.5f; // change this value to your liking
+        camera.ProcessMouseScroll(static_cast<float>(event.offset.y * sensitivity));
+    });
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        EventHandler::get().getEventBus()->process();
         // per-frame time logic
         // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
+        auto currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -245,7 +265,7 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.0f));
-        model = glm::scale(model, glm::vec3(10.5f, 10.5f, 10.5f));
+        model = glm::scale(model, glm::vec3(50.5f, 50.5f, 50.5f));
 
         if (mode.selected)
         {
@@ -446,7 +466,7 @@ void processInput(GLFWwindow *window)
             keyLock.selected = true;
             mode.selected = true;
         }
-        mouse_select(window, lastX, lastY);
+        mouse_select(window, Mouse::position.x, Mouse::position.y);
     }
     else
     {
@@ -464,42 +484,6 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(Camera::RIGHT, deltaTime);
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    if (mouse_left_button)
-    {
-        float sensitivity = 0.01f * camera.Zoom; // change this value to your liking
-        camera.ProcessMouseMovement(-xoffset * sensitivity, -yoffset * sensitivity);
-    }
-}
-
 void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
 {
     int width, height;
@@ -510,57 +494,4 @@ void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
 
     if (rayPicker.selectFaceValid)
         bunnyOverLineModel.getMeshes()[0].setIndices({rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]});
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        {
-            if (rayPicker.selectPointValid)
-                std::cout << "select point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x << ", " << rayPicker.selectPoint.position.y << ", " << rayPicker.selectPoint.position.z << std::endl;
-            else if(rayPicker.selectFaceValid)
-            {
-                std::cout << "select face: " << std::endl;
-                for (int i = 0; i < 3; i++)
-                {
-                    std::cout << "\t point (" << rayPicker.selectFaceIndex[i] << "): " << rayPicker.selectFace[i].position.x << ", " << rayPicker.selectFace[i].position.y << ", " << rayPicker.selectFace[i].position.z << std::endl;
-                }
-
-            }
-            else
-            {
-                std::cout << "select nothing" << std::endl;
-            }
-
-        }
-        mouse_left_button = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-        mouse_right_button = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
-        mouse_middle_button = true;
-    }
-
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        mouse_left_button = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        mouse_right_button = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
-        mouse_middle_button = false;
-    }
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    float sensitivity = 1.5f; // change this value to your liking
-    camera.ProcessMouseScroll(static_cast<float>(yoffset * sensitivity));
-    std::cout << "Zoom: " << camera.Zoom << std::endl;
 }

@@ -1,7 +1,7 @@
 #include "MainRender.h"
-#include "util/Camera.h"
-#include "util/Image.h"
-#include "util/Model.h"
+#include "util/opengl/Camera.h"
+#include "util/opengl/Image.h"
+#include "util/opengl/Model.h"
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>

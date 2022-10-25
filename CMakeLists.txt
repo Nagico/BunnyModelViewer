@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(OpenGL REQUIRED)
 
 include_directories(dependencies/include)
+add_subdirectory(src/util/event/eventbus)
 
 message("OpenGL: ${OPENGL_LIBRARIES}")
 message("Compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -50,15 +51,15 @@ add_executable(
         src/main.cpp
         dependencies/src/glad.c
 
-        src/util/Camera.h
-        src/util/Image.cpp
-        src/util/Image.h
-        src/util/Mesh.cpp
-        src/util/Mesh.h
-        src/util/ShaderProgram.cpp
-        src/util/ShaderProgram.h
-        src/util/Model.cpp
-        src/util/Model.h
+        src/util/opengl/Camera.h
+        src/util/opengl/Image.cpp
+        src/util/opengl/Image.h
+        src/util/opengl/Mesh.cpp
+        src/util/opengl/Mesh.h
+        src/util/opengl/ShaderProgram.cpp
+        src/util/opengl/ShaderProgram.h
+        src/util/opengl/Model.cpp
+        src/util/opengl/Model.h
         
 #        src/util/OpenGLRender.h
 #        src/util/OpenGLWindow.cpp
@@ -67,13 +68,13 @@ add_executable(
 #        src/MainRender.h
 #        src/MainWindow.cpp
 #        src/MainWindow.h
-        src/util/Camera.cpp src/util/RayPicker.cpp src/util/RayPicker.h)
+        src/util/opengl/Camera.cpp src/util/RayPicker.cpp src/util/RayPicker.h src/util/event/Mouse.cpp src/util/event/Mouse.h src/util/event/Event.h src/util/event/enum.h)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64")
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")
-        target_link_libraries(test glfw3 opengl32 assimp-vc143-mt OpenCL)
+        target_link_libraries(test glfw3 opengl32 assimp-vc143-mt OpenCL Dexode::EventBus)
     elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-        target_link_libraries(test glfw3 opengl32 libassimp)
+        target_link_libraries(test glfw3 opengl32 libassimp Dexode::EventBus)
     else()
         message(FATAL_ERROR "Unsupported compiler")
     endif()

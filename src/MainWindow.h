@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include "util/OpenGLWindow.h"
+#include "util/opengl/OpenGLWindow.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 

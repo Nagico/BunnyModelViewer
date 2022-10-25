@@ -1,7 +1,7 @@
 ﻿#include "Model.h"
 #include "Image.h"
 #include <iostream>
-#include <glad/glad.h>
+#include "glad/glad.h"
 
 /// 从文件中加载模型
 /// \param path 路径

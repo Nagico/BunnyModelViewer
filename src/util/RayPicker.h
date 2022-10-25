@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Mesh.h"
+#include "opengl/Mesh.h"
 
 class RayPicker {
 public:

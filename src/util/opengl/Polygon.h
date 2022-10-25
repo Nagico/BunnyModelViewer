@@ -18,7 +18,7 @@ public:
     void render(float offset, float size = 0.f);
     virtual void addIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
     virtual void removeIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
-    void modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
+    bool modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
     virtual void resetIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
 

@@ -195,15 +195,14 @@ int main()
     EventHandler::get().addListener([](const event::Mouse::ClickHoldEvent<MouseButton::RIGHT>& event) {
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
             if (rayPicker.selectPointValid) {
-                std::cout << rayPicker.selectPointIndex << std::endl;
-                highlightPoint.modifyIndices(rayPicker.selectPointIndex);
-                std::cout << "highlight point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x
+                auto status = highlightPoint.modifyIndices(rayPicker.selectPointIndex);
+                std::cout << (status ? "" : "un") << "highlight point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x
                           << ", " << rayPicker.selectPoint.position.y << ", " << rayPicker.selectPoint.position.z
                           << std::endl;
             }
             else if (rayPicker.selectFaceValid) {
-                highlightTriangle.modifyIndices(rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]);
-                std::cout << "highlight face: " << std::endl;
+                auto status = highlightTriangle.modifyIndices(rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]);
+                std::cout << (status ? "" : "un") << "highlight face: " << std::endl;
                 for (int i = 0; i < 3; i++) {
                     std::cout << "\t point (" << rayPicker.selectFaceIndex[i] << "): "
                               << rayPicker.selectFace[i].position.x << ", " << rayPicker.selectFace[i].position.y

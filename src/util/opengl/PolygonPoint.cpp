@@ -54,17 +54,19 @@ unsigned int PolygonPoint::getIndex(const glm::vec3& pos) const {
     return 0xffffffff;  // max unsigned int
 }
 
-void PolygonPoint::modifyIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
+bool PolygonPoint::modifyIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
     auto pointPos = m_vertex[index0].position;
     auto index = getIndex(pointPos);
     if (index != 0xffffffff)  // if the point is in the vector of points
     {
         m_indices.erase(std::find(m_indices.begin(), m_indices.end(), index));
         m_points.erase({m_vertex[index0].position.x, m_vertex[index0].position.y, m_vertex[index0].position.z});
+        return false;
     }
     else
     {
         addIndices(index0, index1, index2);
+        return true;
     }
 }
 

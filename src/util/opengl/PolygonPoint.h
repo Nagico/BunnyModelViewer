@@ -19,7 +19,7 @@ public:
     void addIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
     void removeIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
-    void modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
+    bool modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
     void resetIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
 private:

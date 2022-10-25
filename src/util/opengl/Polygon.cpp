@@ -20,11 +20,15 @@ void Polygon::render(float offset, float size) {
     glPointSize(1.f);
 }
 
-void Polygon::modifyIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
-    if (in(index0, index1, index2))
+bool Polygon::modifyIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
+    if (in(index0, index1, index2)) {
         removeIndices(index0, index1, index2);
-    else
+        return false;
+    }
+    else {
         addIndices(index0, index1, index2);
+        return true;
+    }
 }
 
 Polygon::Polygon() {

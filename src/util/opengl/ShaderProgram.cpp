@@ -39,9 +39,17 @@ bool ShaderProgram::addShaderFile(ShaderType type, const string &filename)
     }
 }
 
-void ShaderProgram::use()
+void ShaderProgram::use() const
 {
     glUseProgram(m_programId);
+}
+
+void ShaderProgram::use(const glm::mat4 model, const glm::mat4 view, const glm::mat4 projection)
+{
+    glUseProgram(m_programId);
+    setValue("model", model);
+    setValue("view", view);
+    setValue("projection", projection);
 }
 
 bool ShaderProgram::link()
@@ -60,42 +68,42 @@ bool ShaderProgram::link()
     else return true;
 }
 
-void ShaderProgram::setValue(const string &name, int value)
+void ShaderProgram::setValue(const string &name, int value) const
 {
     glUniform1i(glGetUniformLocation(m_programId, name.c_str()), value);
 }
 
-void ShaderProgram::setValue(const string &name, float value)
+void ShaderProgram::setValue(const string &name, float value) const
 {
     glUniform1f(glGetUniformLocation(m_programId, name.c_str()), value);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::vec2 &value)
+void ShaderProgram::setValue(const string &name, const glm::vec2 &value) const
 {
     glUniform2fv(glGetUniformLocation(m_programId, name.c_str()), 1, &value[0]);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::vec3 &value)
+void ShaderProgram::setValue(const string &name, const glm::vec3 &value) const
 {
     glUniform3fv(glGetUniformLocation(m_programId, name.c_str()), 1, &value[0]);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::vec4 &value)
+void ShaderProgram::setValue(const string &name, const glm::vec4 &value) const
 {
     glUniform4fv(glGetUniformLocation(m_programId, name.c_str()), 1, &value[0]);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::mat2 &value)
+void ShaderProgram::setValue(const string &name, const glm::mat2 &value) const
 {
     glUniformMatrix2fv(glGetUniformLocation(m_programId, name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::mat3 &value)
+void ShaderProgram::setValue(const string &name, const glm::mat3 &value) const
 {
     glUniformMatrix3fv(glGetUniformLocation(m_programId, name.c_str()), 1, GL_FALSE, &value[0][0]);
 }
 
-void ShaderProgram::setValue(const string &name, const glm::mat4 &value)
+void ShaderProgram::setValue(const string &name, const glm::mat4 &value) const
 {
     glUniformMatrix4fv(glGetUniformLocation(m_programId, name.c_str()), 1, GL_FALSE, &value[0][0]);
 }

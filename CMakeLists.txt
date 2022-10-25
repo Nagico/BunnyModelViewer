@@ -61,14 +61,21 @@ add_executable(
         src/util/opengl/Model.cpp
         src/util/opengl/Model.h
         
-#        src/util/OpenGLRender.h
-#        src/util/OpenGLWindow.cpp
-#        src/util/OpenGLWindow.h
-#        src/MainRender.cpp
-#        src/MainRender.h
-#        src/MainWindow.cpp
-#        src/MainWindow.h
-        src/util/opengl/Camera.cpp src/util/RayPicker.cpp src/util/RayPicker.h src/util/event/Mouse.cpp src/util/event/Mouse.h src/util/event/Event.h src/util/event/enum.h)
+        src/util/opengl/OpenGLRender.h
+        src/util/opengl/OpenGLWindow.cpp
+        src/util/opengl/OpenGLWindow.h
+        src/MainRender.cpp
+        src/MainRender.h
+        src/MainWindow.cpp
+        src/MainWindow.h
+        src/util/opengl/Camera.cpp
+        src/util/RayPicker.cpp
+        src/util/RayPicker.h
+        src/util/event/Mouse.cpp
+        src/util/event/Mouse.h
+        src/util/event/Event.h
+        src/util/event/enum.h
+)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64")
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")

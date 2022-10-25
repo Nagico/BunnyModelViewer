@@ -38,6 +38,12 @@ glm::mat4 model;
 // model
 Model bunnyModel;
 Model bunnyOverLineModel;
+Model lightModel;
+
+glm::vec4 lineColor(0.12156863f, 0.8862745f, 0.6039216f, 1.f);
+glm::vec4 pointColor(0.35686275f, 0.078431375f, 0.83137256f, 0.01f);
+glm::vec4 overPointColor(0.02156863f, 0.9862745f, 0.9039216f, 1.f);
+glm::vec4 overFaceColor(0.82156863f, 0.0862745f, 0.2039216f, 1.f);
 
 RayPicker rayPicker;
 
@@ -106,11 +112,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    ShaderProgram bunnyShader;
-    ShaderProgram bunnyLineShader;
-    ShaderProgram bunnyOverShader;
-    ShaderProgram bunnyOverPointShader;
-    ShaderProgram bunnyPointShader;
+    ShaderProgram modelShader;
+    ShaderProgram modelColorShader;
     ShaderProgram lightShader;
 
     // build and compile shaders
@@ -120,23 +123,11 @@ int main()
     {
         #pragma omp section
         {
-            bunnyShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_fragment.glsl");
+            modelShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_fragment.glsl");
         }
         #pragma omp section
         {
-            bunnyLineShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_line_fragment.glsl");
-        }
-        #pragma omp section
-        {
-            bunnyOverShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_over_fragment.glsl");
-        }
-        #pragma omp section
-        {
-            bunnyOverPointShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_over_point_fragment.glsl");
-        }
-        #pragma omp section
-        {
-            bunnyPointShader.load("assets/shader/model_vertex.glsl","assets/shader/model_point_fragment.glsl");
+            modelColorShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_color_fragment.glsl");
         }
         #pragma omp section
         {
@@ -145,12 +136,7 @@ int main()
     };
     // load models
     // -----------
-    //bunnyModel = Model("assets/model/bunny_texture/bunny.obj");
-
-    Model lightModel;
-
     auto path = "assets/model/bunny_texture/bunny.obj";
-    //auto path = "assets/model/plane.ply";
     #pragma omp parallel
     #pragma omp sections
     {
@@ -279,16 +265,14 @@ int main()
                 glBindBuffer(GL_ARRAY_BUFFER, VBO);
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(selectPointVertices), selectPointVertices);
 
-
+                modelColorShader.use(model, view, projection);
+                modelColorShader.setValue("pureColor", overPointColor);
+                glPolygonOffset(-1.1f,-1.1f);
                 glPointSize(5.0f);
-                bunnyOverPointShader.use();
-                bunnyOverPointShader.setValue("projection", projection);
-                bunnyOverPointShader.setValue("view", view);
-                bunnyOverPointShader.setValue("model", model);
-
                 glBindVertexArray(VAO);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glBindVertexArray(0);
+                glDisable(GL_POLYGON_OFFSET_LINE);
             }
             else if (rayPicker.selectFaceValid)
             {
@@ -296,13 +280,10 @@ int main()
                 glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
                 glPolygonOffset(-1.6f,-1.6f);//设置多边形偏移量
                 // don't forget to enable shader before setting uniforms
-                bunnyOverShader.use();
-
-                bunnyOverShader.setValue("projection", projection);
-                bunnyOverShader.setValue("view", view);
-                // render the loaded model
-                bunnyOverShader.setValue("model", model);
-                bunnyOverLineModel.render(&bunnyOverShader);
+                modelColorShader.use(model, view, projection);
+                modelColorShader.setValue("pureColor", overFaceColor);
+                bunnyOverLineModel.render(&modelColorShader);
+                glDisable(GL_POLYGON_OFFSET_LINE);
             }
         }
 
@@ -310,26 +291,21 @@ int main()
         {
             glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
             // don't forget to enable shader before setting uniforms
-            bunnyShader.use();
-            bunnyShader.setValue("lightPos", lightPos);
-            bunnyShader.setValue("viewPos", camera.Position);
+            modelShader.use(model, view, projection);
+            modelShader.setValue("lightPos", lightPos);
+            modelShader.setValue("viewPos", camera.Position);
 
-            bunnyShader.setValue("light.ambient", 0.3f, 0.3f, 0.3f);
-            bunnyShader.setValue("light.diffuse", 0.5f, 0.5f, 0.5f);
-            bunnyShader.setValue("light.specular", 1.0f, 1.0f, 1.0f);
+            modelShader.setValue("light.ambient", 0.3f, 0.3f, 0.3f);
+            modelShader.setValue("light.diffuse", 0.5f, 0.5f, 0.5f);
+            modelShader.setValue("light.specular", 1.0f, 1.0f, 1.0f);
 
-            bunnyShader.setValue("light.constant", 1.0f);
-            bunnyShader.setValue("light.linear", 0.09f);
-            bunnyShader.setValue("light.quadratic", 0.032f);
+            modelShader.setValue("light.constant", 1.0f);
+            modelShader.setValue("light.linear", 0.09f);
+            modelShader.setValue("light.quadratic", 0.032f);
 
-            bunnyShader.setValue("material.shininess", 64.0f);
+            modelShader.setValue("material.shininess", 64.0f);
 
-            bunnyShader.setValue("projection", projection);
-            bunnyShader.setValue("view", view);
-            // render the loaded model
-            bunnyShader.setValue("model", model);
-
-            bunnyModel.render(&bunnyShader, false);
+            bunnyModel.render(&modelShader, false);
         }
 
         if (mode.light)
@@ -351,11 +327,9 @@ int main()
             glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
             glLineWidth(1.0f);
             glPolygonOffset(-1.0f,-1.0f);//设置多边形偏移量
-            bunnyLineShader.use();
-            bunnyLineShader.setValue("model", model);
-            bunnyLineShader.setValue("projection", projection);
-            bunnyLineShader.setValue("view", view);
-            bunnyModel.render(&bunnyLineShader);
+            modelColorShader.use(model, view, projection);
+            modelColorShader.setValue("pureColor", lineColor);
+            bunnyModel.render(&modelColorShader);
             glDisable(GL_POLYGON_OFFSET_LINE);//关闭多边形偏移
         }
 
@@ -365,11 +339,9 @@ int main()
             glEnable(GL_POLYGON_OFFSET_POINT);//开启多边形偏移
             glPolygonOffset(-1.5f,-1.5f);//设置多边形偏移量
             glPointSize(2.5f);
-            bunnyPointShader.use();
-            bunnyPointShader.setValue("model", model);
-            bunnyPointShader.setValue("projection", projection);
-            bunnyPointShader.setValue("view", view);
-            bunnyModel.render(&bunnyPointShader);
+            modelColorShader.use(model, view, projection);
+            modelColorShader.setValue("pureColor", pointColor);
+            bunnyModel.render(&modelColorShader);
             glDisable(GL_POLYGON_OFFSET_POINT);//关闭多边形偏移
         }
 

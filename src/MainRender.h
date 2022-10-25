@@ -1,4 +1,4 @@
-#ifndef MAINRENDER_H
+﻿#ifndef MAINRENDER_H
 #define MAINRENDER_H
 #include "util/opengl/OpenGLRender.h"
 #include "util/opengl/ShaderProgram.h"
@@ -21,8 +21,6 @@ public:
 
 private:
     GLuint m_lampVao, m_vbo, m_ebo;
-    //0为聚光，1为定向光，2-5为点光源
-    glm::vec3 m_lightColor[6];
     ShaderProgram m_modelProgram, m_lampProgram[6];
     glm::mat4x4 m_projection;
     Camera *m_camera;

@@ -27,7 +27,7 @@ void Mouse::mouseButtonCallback(GLFWwindow *window, int buttonIn, int action, in
     auto button = static_cast<MouseButton>(buttonIn);
 
     if (action == GLFW_PRESS) {
-        if (state[button])
+        if (!state[button])
             EventHandler::get().publishMouseClickHoldEvent(button, position);
 
         state[button] = true;

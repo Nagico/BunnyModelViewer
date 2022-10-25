@@ -1,4 +1,4 @@
-#include "OpenGLWindow.h"
+﻿#include "OpenGLWindow.h"
 #include <iostream>
 #include <sstream>
 #include <sysinfoapi.h>

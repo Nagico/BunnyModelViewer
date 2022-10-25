@@ -62,7 +62,7 @@ public:
 
     void render(ShaderProgram *program, bool useMeshInfo = true);
 
-    void setIndices(vector<unsigned int> indices);
+    [[nodiscard]] unsigned int getVao() const;
 
     [[nodiscard]] const vector<VertexData> &getVertices() const;
     [[nodiscard]] const vector<unsigned int> &getIndices() const;
@@ -70,11 +70,10 @@ public:
     [[nodiscard]] const vector<Texture> &getTextures() const;
     [[nodiscard]] const MeshInfo &getMeshInfo() const;
 
-    unsigned int m_vao, m_vbo, m_ebo;
-
 private:
     void setupMesh();
 
+    unsigned int m_vao, m_vbo, m_ebo;
     vector<VertexData> m_vertices;
     vector<unsigned int> m_indices;
     vector<Texture> m_textures;

@@ -23,16 +23,6 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::setIndices(vector<unsigned int> indices)
-{
-    glDeleteVertexArrays(1, &m_vao);
-    glDeleteBuffers(1, &m_vbo);
-    glDeleteBuffers(1, &m_ebo);
-    m_indices = std::move(indices);
-
-    setupMesh();
-}
-
 void Mesh::render(ShaderProgram *program, bool useMeshInfo)
 {
     size_t diffuseNum = 1;
@@ -143,4 +133,8 @@ const vector<Face> &Mesh::getFaces() const {
 
 Mesh::Mesh() {
 
+}
+
+unsigned int Mesh::getVao() const {
+    return m_vao;
 }

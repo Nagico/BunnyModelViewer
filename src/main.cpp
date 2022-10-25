@@ -10,6 +10,8 @@
 #include "util/opengl/Model.h"
 #include "util/RayPicker.h"
 #include "util/event/Mouse.h"
+#include "util/opengl/PolygonPoint.h"
+#include "util/opengl/PolygonTriangle.h"
 
 #include <iostream>
 
@@ -37,8 +39,13 @@ glm::mat4 model;
 
 // model
 Model bunnyModel;
-Model bunnyOverLineModel;
 Model lightModel;
+
+// polygon mode
+PolygonPoint highlightPoint;
+PolygonPoint selectPoint;
+PolygonTriangle highlightTriangle;
+PolygonTriangle selectTriangle;
 
 glm::vec4 lineColor(0.12156863f, 0.8862745f, 0.6039216f, 1.f);
 glm::vec4 pointColor(0.35686275f, 0.078431375f, 0.83137256f, 0.01f);
@@ -146,10 +153,6 @@ int main()
         }
         #pragma omp section
         {
-            bunnyOverLineModel = Model(path);
-        }
-        #pragma omp section
-        {
             lightModel = Model("assets/model/sphere.ply");
         };
     };
@@ -158,22 +161,10 @@ int main()
     glfwWindowHint(GLFW_SAMPLES, 8);
     glEnable(GL_MULTISAMPLE);
 
-    float selectPointVertices[] = {
-            -0.5f, -0.5f, 0.0f, // left
-            0.5f, -0.5f, 0.0f, // right
-            0.0f,  0.5f, 0.0f  // top
-    };
-
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(selectPointVertices), selectPointVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 1 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    selectPoint.setVao(bunnyModel.getMeshes()[0].getVao());
+    highlightPoint.setVao(bunnyModel.getMeshes()[0].getVao());
+    selectTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
+    highlightTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
 
     EventHandler::get().addListener([](const event::Mouse::ClickEvent<MouseButton::LEFT>& event) {
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
@@ -257,33 +248,18 @@ int main()
         {
             if (rayPicker.selectPointValid)
             {
-                auto point = rayPicker.selectPoint.position;
-                selectPointVertices[0] = point.x;
-                selectPointVertices[1] = point.y;
-                selectPointVertices[2] = point.z;
-
-                glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(selectPointVertices), selectPointVertices);
-
+                selectPoint.resetIndices(rayPicker.selectPointIndex);
                 modelColorShader.use(model, view, projection);
                 modelColorShader.setValue("pureColor", overPointColor);
-                glPolygonOffset(-1.1f,-1.1f);
-                glPointSize(5.0f);
-                glBindVertexArray(VAO);
-                glDrawArrays(GL_POINTS, 0, 1);
-                glBindVertexArray(0);
-                glDisable(GL_POLYGON_OFFSET_LINE);
+                selectPoint.render(-1.1f, 5.0f);
+
             }
             else if (rayPicker.selectFaceValid)
             {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
-                glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
-                glPolygonOffset(-1.6f,-1.6f);//设置多边形偏移量
-                // don't forget to enable shader before setting uniforms
+                selectTriangle.resetIndices(rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]);
                 modelColorShader.use(model, view, projection);
                 modelColorShader.setValue("pureColor", overFaceColor);
-                bunnyOverLineModel.render(&modelColorShader);
-                glDisable(GL_POLYGON_OFFSET_LINE);
+                selectTriangle.render(-1.1f);
             }
         }
 
@@ -463,7 +439,4 @@ void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
     rayPicker.rayPick(
             bunnyModel.getMeshes()[0], camera.Position,
             model, view, projection, (float)mouse_xpos, (float)mouse_ypos, width, height);
-
-    if (rayPicker.selectFaceValid)
-        bunnyOverLineModel.getMeshes()[0].setIndices({rayPicker.selectFaceIndex[0], rayPicker.selectFaceIndex[1], rayPicker.selectFaceIndex[2]});
 }

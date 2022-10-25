@@ -164,7 +164,9 @@ int main()
     glEnable(GL_MULTISAMPLE);
 
     selectPoint.setVao(bunnyModel.getMeshes()[0].getVao());
+    selectPoint.setVertex(bunnyModel.getMeshes()[0].getVertices());
     highlightPoint.setVao(bunnyModel.getMeshes()[0].getVao());
+    highlightPoint.setVertex(bunnyModel.getMeshes()[0].getVertices());
     selectTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
     highlightTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
 

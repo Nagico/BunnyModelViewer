@@ -35,3 +35,4 @@ void Polygon::setVao(unsigned int vao) {
     m_vao = vao;
 }
 
+

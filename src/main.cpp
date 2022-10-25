@@ -19,8 +19,8 @@ void processInput(GLFWwindow *window);
 void mouse_select(GLFWwindow* window, double xpos, double ypos);
 
 // settings
-const unsigned int SCR_WIDTH = 500;
-const unsigned int SCR_HEIGHT = 500;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 800;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -146,6 +146,7 @@ int main()
     // load models
     // -----------
     auto path = "assets/model/bunny_texture/bunny.obj";
+    //auto path = "assets/model/bunny_iH.ply2";
     #pragma omp parallel
     #pragma omp sections
     {
@@ -229,6 +230,9 @@ int main()
         camera.ProcessMouseScroll(static_cast<float>(event.offset.y * sensitivity));
     });
 
+    auto baseModelScale = std::min(SCR_WIDTH, SCR_HEIGHT) * 0.002f / pow(bunnyModel.getMeshes()[0].getMeshInfo().maxDis,1.15);
+    std::cout << "baseModelScale: " << baseModelScale << std::endl;
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -270,8 +274,8 @@ int main()
         view = camera.GetViewMatrix();
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.0f));
-        model = glm::scale(model, glm::vec3(50.5f, 50.5f, 50.5f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(baseModelScale));
 
         modelColorShader.use(model, view, projection);
         modelColorShader.setValue("pureColor", highlightPointColor);

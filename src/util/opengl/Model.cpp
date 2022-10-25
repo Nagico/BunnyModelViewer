@@ -3,6 +3,7 @@
 #include <iostream>
 #include "glad/glad.h"
 
+
 /// 从文件中加载模型
 /// \param path 路径
 Model::Model(const string &path)
@@ -83,6 +84,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     vector<Texture> textures;  // 纹理数据
     MeshInfo meshInfo;  // 网格信息
 
+    glm::vec3 maxVertex = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+    glm::vec3 minVertex = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+
     // 处理顶点数据 VAO
     for (size_t i = 0; i < mesh->mNumVertices; i++)
     {
@@ -94,6 +98,14 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         position.y = mesh->mVertices[i].y;
         position.z = mesh->mVertices[i].z;
         vertexData.position = position;
+
+        // 最值计算
+        maxVertex.x = fmax(maxVertex.x, position.x);
+        maxVertex.y = fmax(maxVertex.y, position.y);
+        maxVertex.z = fmax(maxVertex.z, position.z);
+        minVertex.x = fmin(minVertex.x, position.x);
+        minVertex.y = fmin(minVertex.y, position.y);
+        minVertex.z = fmin(minVertex.z, position.z);
 
         // 顶点法向量
         glm::vec3 normal;
@@ -186,6 +198,13 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
         meshInfo.valid = true;
     }
+
+    // 统计xyz最远距离
+    float disX = maxVertex.x - minVertex.x;
+    float disY = maxVertex.y - minVertex.y;
+    float disZ = maxVertex.z - minVertex.z;
+
+    meshInfo.maxDis = fmax(disX, fmax(disY, disZ));
 
     return Mesh(vertices, indices, faces, textures, meshInfo);  // 返回标准化网格对象
 }

@@ -43,6 +43,8 @@ struct MeshInfo
     glm::vec3 diffuse = glm::vec3(1);  // 材质的漫反射系数
     glm::vec3 specular = glm::vec3(1);  // 材质的镜面反射系数
     glm::vec3 emission = glm::vec3(1);  // 材质的自发光系数
+
+    float maxDis = 0.0f; // 最大距离
 };
 
 class ShaderProgram;

@@ -19,7 +19,7 @@ namespace event {
         };
 
         template<MouseButton T>
-        struct ClickEventHold {
+        struct ClickHoldEvent {
             glm::vec2 position;
         };
 
@@ -89,13 +89,13 @@ public:
     void publishMouseClickHoldEvent(MouseButton button, glm::vec2 position) {
         switch (button) {
             case MouseButton::LEFT:
-                m_EventBus->postpone(event::Mouse::ClickEventHold<MouseButton::LEFT>{position});
+                m_EventBus->postpone(event::Mouse::ClickHoldEvent<MouseButton::LEFT>{position});
                 break;
             case MouseButton::RIGHT:
-                m_EventBus->postpone(event::Mouse::ClickEventHold<MouseButton::RIGHT>{position});
+                m_EventBus->postpone(event::Mouse::ClickHoldEvent<MouseButton::RIGHT>{position});
                 break;
             case MouseButton::MIDDLE:
-                m_EventBus->postpone(event::Mouse::ClickEventHold<MouseButton::MIDDLE>{position});
+                m_EventBus->postpone(event::Mouse::ClickHoldEvent<MouseButton::MIDDLE>{position});
                 break;
             default:
                 break;

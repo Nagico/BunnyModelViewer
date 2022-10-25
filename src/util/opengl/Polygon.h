@@ -20,9 +20,11 @@ public:
     void modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
     virtual void resetIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
+
+    vector<unsigned int> m_indices;
 protected:
     unsigned int m_vao;
-    vector<unsigned int> m_indices;
+
     virtual void draw() = 0;
     virtual bool in(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
 };

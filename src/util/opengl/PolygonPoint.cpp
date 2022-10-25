@@ -22,7 +22,11 @@ void PolygonPoint::draw() {
 }
 
 bool PolygonPoint::in(unsigned int index0, unsigned int index1, unsigned int index2) {
-    return std::find(m_indices.begin(), m_indices.end(), index0) != m_indices.end();
+    for (auto& it : m_indices) {
+        if (it == index0)
+            return true;
+    }
+    return false;
 }
 
 PolygonPoint::PolygonPoint() {

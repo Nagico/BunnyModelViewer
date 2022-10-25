@@ -191,6 +191,7 @@ void RayPicker::checkFaces()
             selectFaceIndex[i] = findFace.vertex[i];
         }
         crossPoint = orig + dir * minT;
+        m_distance = minT;
         checkSelectPoint();
     }
     else
@@ -211,7 +212,7 @@ void RayPicker::checkSelectPoint()
     {
         auto pointTriangleView = m_projection * m_view * m_model * glm::vec4(selectFace[i].position, 1.0f);
         len[i] = glm::length(glm::vec2(pointTriangleView.x, pointTriangleView.y) - glm::vec2(pointView.x, pointView.y));
-        if (len[i] < minLen && len[i] <= POINT_PICK_EPSILON)
+        if (len[i] < minLen && len[i] <= POINT_PICK_EPSILON * m_distance)
         {
             minLen = len[i];
             index = i;

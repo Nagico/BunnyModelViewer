@@ -10,7 +10,7 @@ class RayPicker {
 public:
     RayPicker();
 
-    static constexpr float POINT_PICK_EPSILON = 0.01f;
+    static constexpr float POINT_PICK_EPSILON = 0.02f;
 
     glm::vec3 orig, dir;
     glm::vec3 crossPoint;
@@ -38,6 +38,7 @@ public:
 private:
     float m_xpos, m_ypos;
     int m_width, m_height;
+    float m_distance;
 
     glm::mat4 m_model, m_view, m_projection;
 

@@ -14,12 +14,17 @@ namespace event {
     struct Mouse {
 
         template<MouseButton T>
-        struct ClickEvent {
+        struct ClickPressEvent {
             glm::vec2 position;
         };
 
         template<MouseButton T>
         struct ClickHoldEvent {
+            glm::vec2 position;
+        };
+
+        template<MouseButton T>
+        struct ClickReleaseEvent {
             glm::vec2 position;
         };
 
@@ -35,8 +40,16 @@ namespace event {
     };
 
     struct Keyboard {
-        template<KeyboardButton T>
+        template<KeyboardKey T>
         struct KeyPressEvent {
+        };
+
+        template<KeyboardKey T>
+        struct KeyHoldEvent {
+        };
+
+        template<KeyboardKey T>
+        struct KeyReleaseEvent {
         };
     };
 }
@@ -70,16 +83,16 @@ public:
         m_Listener->listen(callback);
     }
 
-    void publishMouseClickEvent(MouseButton button, glm::vec2 position) {
+    void publishMouseClickPressEvent(MouseButton button, glm::vec2 position) {
         switch (button) {
             case MouseButton::LEFT:
-                m_EventBus->postpone(event::Mouse::ClickEvent<MouseButton::LEFT>{position});
+                m_EventBus->postpone(event::Mouse::ClickPressEvent<MouseButton::LEFT>{position});
                 break;
             case MouseButton::RIGHT:
-                m_EventBus->postpone(event::Mouse::ClickEvent<MouseButton::RIGHT>{position});
+                m_EventBus->postpone(event::Mouse::ClickPressEvent<MouseButton::RIGHT>{position});
                 break;
             case MouseButton::MIDDLE:
-                m_EventBus->postpone(event::Mouse::ClickEvent<MouseButton::MIDDLE>{position});
+                m_EventBus->postpone(event::Mouse::ClickPressEvent<MouseButton::MIDDLE>{position});
                 break;
             default:
                 break;
@@ -102,367 +115,217 @@ public:
         }
     }
 
-    void publishKeyPressEvent(KeyboardButton button) {
+    void publishMouseClickReleaseEvent(MouseButton button, glm::vec2 position) {
         switch (button) {
-//            case KeyboardButton::SPACE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::SPACE>{});
-//                break;
-//            case KeyboardButton::APOSTROPHE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::APOSTROPHE>{});
-//                break;
-//            case KeyboardButton::COMMA:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::COMMA>{});
-//                break;
-//            case KeyboardButton::MINUS:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::MINUS>{});
-//                break;
-//            case KeyboardButton::PERIOD:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::PERIOD>{});
-//                break;
-//            case KeyboardButton::SLASH:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::SLASH>{});
-//                break;
-//            case KeyboardButton::NUM_0:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_0>{});
-//                break;
-//            case KeyboardButton::NUM_1:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_1>{});
-//                break;
-//            case KeyboardButton::NUM_2:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_2>{});
-//                break;
-//            case KeyboardButton::NUM_3:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_3>{});
-//                break;
-//            case KeyboardButton::NUM_4:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_4>{});
-//                break;
-//            case KeyboardButton::NUM_5:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_5>{});
-//                break;
-//            case KeyboardButton::NUM_6:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_6>{});
-//                break;
-//            case KeyboardButton::NUM_7:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_7>{});
-//                break;
-//            case KeyboardButton::NUM_8:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_8>{});
-//                break;
-//            case KeyboardButton::NUM_9:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_9>{});
-//                break;
-//            case KeyboardButton::SEMICOLON:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::SEMICOLON>{});
-//                break;
-//            case KeyboardButton::EQUAL:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::EQUAL>{});
-//                break;
-            case KeyboardButton::A:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::A>{});
+            case MouseButton::LEFT:
+                m_EventBus->postpone(event::Mouse::ClickReleaseEvent<MouseButton::LEFT>{position});
                 break;
-            case KeyboardButton::B:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::B>{});
+            case MouseButton::RIGHT:
+                m_EventBus->postpone(event::Mouse::ClickReleaseEvent<MouseButton::RIGHT>{position});
                 break;
-            case KeyboardButton::C:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::C>{});
+            case MouseButton::MIDDLE:
+                m_EventBus->postpone(event::Mouse::ClickReleaseEvent<MouseButton::MIDDLE>{position});
                 break;
-            case KeyboardButton::D:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::D>{});
+            default:
                 break;
-            case KeyboardButton::E:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::E>{});
+        }
+    }
+
+    void publishKeyPressEvent(KeyboardKey button) {
+        switch (button) {
+            case KeyboardKey::A:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::A>{});
                 break;
-            case KeyboardButton::F:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F>{});
+            case KeyboardKey::D:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::D>{});
                 break;
-            case KeyboardButton::G:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::G>{});
+            case KeyboardKey::E:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::E>{});
                 break;
-            case KeyboardButton::H:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::H>{});
+            case KeyboardKey::F:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::F>{});
                 break;
-            case KeyboardButton::I:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::I>{});
+            case KeyboardKey::L:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::L>{});
                 break;
-            case KeyboardButton::J:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::J>{});
+            case KeyboardKey::P:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::P>{});
                 break;
-            case KeyboardButton::K:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::K>{});
+            case KeyboardKey::Q:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::Q>{});
                 break;
-            case KeyboardButton::L:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::L>{});
+            case KeyboardKey::S:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::S>{});
                 break;
-            case KeyboardButton::M:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::M>{});
+            case KeyboardKey::W:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::W>{});
                 break;
-            case KeyboardButton::N:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::N>{});
+            case KeyboardKey::RIGHT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::RIGHT>{});
                 break;
-            case KeyboardButton::O:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::O>{});
+            case KeyboardKey::LEFT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::LEFT>{});
                 break;
-            case KeyboardButton::P:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::P>{});
+            case KeyboardKey::DOWN:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::DOWN>{});
                 break;
-            case KeyboardButton::Q:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::Q>{});
+            case KeyboardKey::UP:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::UP>{});
                 break;
-            case KeyboardButton::R:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::R>{});
+            case KeyboardKey::LEFT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_SHIFT>{});
                 break;
-            case KeyboardButton::S:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::S>{});
+            case KeyboardKey::LEFT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_CONTROL>{});
                 break;
-            case KeyboardButton::T:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::T>{});
+            case KeyboardKey::LEFT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_ALT>{});
                 break;
-            case KeyboardButton::U:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::U>{});
+            case KeyboardKey::RIGHT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::RIGHT_SHIFT>{});
                 break;
-            case KeyboardButton::V:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::V>{});
+            case KeyboardKey::RIGHT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::RIGHT_CONTROL>{});
                 break;
-            case KeyboardButton::W:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::W>{});
+            case KeyboardKey::RIGHT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::RIGHT_ALT>{});
                 break;
-            case KeyboardButton::X:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::X>{});
+            case KeyboardKey::ECS:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::ECS>{});
                 break;
-            case KeyboardButton::Y:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::Y>{});
+            default:
                 break;
-            case KeyboardButton::Z:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::Z>{});
+        }
+    }
+
+    void publishKeyHoldEvent(KeyboardKey button) {
+        switch (button) {
+            case KeyboardKey::A:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::A>{});
                 break;
-//            case KeyboardButton::LEFT_BRACKET:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT_BRACKET>{});
-//                break;
-//            case KeyboardButton::BACKSLASH:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::BACKSLASH>{});
-//                break;
-//            case KeyboardButton::RIGHT_BRACKET:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT_BRACKET>{});
-//                break;
-//            case KeyboardButton::GRAVE_ACCENT:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::GRAVE_ACCENT>{});
-//                break;
-//            case KeyboardButton::WORLD_1:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::WORLD_1>{});
-//                break;
-//            case KeyboardButton::WORLD_2:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::WORLD_2>{});
-//                break;
-//            case KeyboardButton::ESCAPE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::ESCAPE>{});
-//                break;
-//            case KeyboardButton::ENTER:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::ENTER>{});
-//                break;
-//            case KeyboardButton::TAB:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::TAB>{});
-//                break;
-//            case KeyboardButton::BACKSPACE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::BACKSPACE>{});
-//                break;
-//            case KeyboardButton::INSERT:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::INSERT>{});
-//                break;
-//            case KeyboardButton::DELETE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::DELETE>{});
-//                break;
-            case KeyboardButton::RIGHT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT>{});
+            case KeyboardKey::D:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::D>{});
                 break;
-            case KeyboardButton::LEFT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT>{});
+            case KeyboardKey::E:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::E>{});
                 break;
-            case KeyboardButton::DOWN:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::DOWN>{});
+            case KeyboardKey::F:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::F>{});
                 break;
-            case KeyboardButton::UP:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::UP>{});
+            case KeyboardKey::L:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::L>{});
                 break;
-//            case KeyboardButton::PAGE_UP:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::PAGE_UP>{});
-//                break;
-//            case KeyboardButton::PAGE_DOWN:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::PAGE_DOWN>{});
-//                break;
-//            case KeyboardButton::HOME:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::HOME>{});
-//                break;
-//            case KeyboardButton::END:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::END>{});
-//                break;
-//            case KeyboardButton::CAPS_LOCK:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::CAPS_LOCK>{});
-//                break;
-//            case KeyboardButton::SCROLL_LOCK:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::SCROLL_LOCK>{});
-//                break;
-//            case KeyboardButton::NUM_LOCK:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::NUM_LOCK>{});
-//                break;
-//            case KeyboardButton::PRINT_SCREEN:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::PRINT_SCREEN>{});
-//                break;
-//            case KeyboardButton::PAUSE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::PAUSE>{});
-//                break;
-//            case KeyboardButton::F1:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F1>{});
-//                break;
-//            case KeyboardButton::F2:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F2>{});
-//                break;
-//            case KeyboardButton::F3:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F3>{});
-//                break;
-//            case KeyboardButton::F4:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F4>{});
-//                break;
-//            case KeyboardButton::F5:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F5>{});
-//                break;
-//            case KeyboardButton::F6:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F6>{});
-//                break;
-//            case KeyboardButton::F7:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F7>{});
-//                break;
-//            case KeyboardButton::F8:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F8>{});
-//                break;
-//            case KeyboardButton::F9:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F9>{});
-//                break;
-//            case KeyboardButton::F10:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F10>{});
-//                break;
-//            case KeyboardButton::F11:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F11>{});
-//                break;
-//            case KeyboardButton::F12:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F12>{});
-//                break;
-//            case KeyboardButton::F13:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F13>{});
-//                break;
-//            case KeyboardButton::F14:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F14>{});
-//                break;
-//            case KeyboardButton::F15:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F15>{});
-//                break;
-//            case KeyboardButton::F16:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F16>{});
-//                break;
-//            case KeyboardButton::F17:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F17>{});
-//                break;
-//            case KeyboardButton::F18:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F18>{});
-//                break;
-//            case KeyboardButton::F19:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F19>{});
-//                break;
-//            case KeyboardButton::F20:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F20>{});
-//                break;
-//            case KeyboardButton::F21:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F21>{});
-//                break;
-//            case KeyboardButton::F22:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F22>{});
-//                break;
-//            case KeyboardButton::F23:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F23>{});
-//                break;
-//            case KeyboardButton::F24:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F24>{});
-//                break;
-//            case KeyboardButton::F25:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::F25>{});
-//                break;
-//            case KeyboardButton::KP_0:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_0>{});
-//                break;
-//            case KeyboardButton::KP_1:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_1>{});
-//                break;
-//            case KeyboardButton::KP_2:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_2>{});
-//                break;
-//            case KeyboardButton::KP_3:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_3>{});
-//                break;
-//            case KeyboardButton::KP_4:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_4>{});
-//                break;
-//            case KeyboardButton::KP_5:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_5>{});
-//                break;
-//            case KeyboardButton::KP_6:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_6>{});
-//                break;
-//            case KeyboardButton::KP_7:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_7>{});
-//                break;
-//            case KeyboardButton::KP_8:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_8>{});
-//                break;
-//            case KeyboardButton::KP_9:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_9>{});
-//                break;
-//            case KeyboardButton::KP_DECIMAL:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_DECIMAL>{});
-//                break;
-//            case KeyboardButton::KP_DIVIDE:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_DIVIDE>{});
-//                break;
-//            case KeyboardButton::KP_MULTIPLY:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_MULTIPLY>{});
-//                break;
-//            case KeyboardButton::KP_SUBTRACT:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_SUBTRACT>{});
-//                break;
-//            case KeyboardButton::KP_ADD:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_ADD>{});
-//                break;
-//            case KeyboardButton::KP_ENTER:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_ENTER>{});
-//                break;
-//            case KeyboardButton::KP_EQUAL:
-//                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::KP_EQUAL>{});
-//                break;
-            case KeyboardButton::LEFT_SHIFT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT_SHIFT>{});
+            case KeyboardKey::P:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::P>{});
                 break;
-            case KeyboardButton::LEFT_CONTROL:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT_CONTROL>{});
+            case KeyboardKey::Q:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::Q>{});
                 break;
-            case KeyboardButton::LEFT_ALT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT_ALT>{});
+            case KeyboardKey::S:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::S>{});
                 break;
-            case KeyboardButton::LEFT_SUPER:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::LEFT_SUPER>{});
+            case KeyboardKey::W:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::W>{});
                 break;
-            case KeyboardButton::RIGHT_SHIFT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT_SHIFT>{});
+            case KeyboardKey::RIGHT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::RIGHT>{});
                 break;
-            case KeyboardButton::RIGHT_CONTROL:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT_CONTROL>{});
+            case KeyboardKey::LEFT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT>{});
                 break;
-            case KeyboardButton::RIGHT_ALT:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT_ALT>{});
+            case KeyboardKey::DOWN:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::DOWN>{});
                 break;
-            case KeyboardButton::RIGHT_SUPER:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::RIGHT_SUPER>{});
+            case KeyboardKey::UP:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::UP>{});
                 break;
-            case KeyboardButton::MENU:
-                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardButton::MENU>{});
+            case KeyboardKey::LEFT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT_SHIFT>{});
+                break;
+            case KeyboardKey::LEFT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT_CONTROL>{});
+                break;
+            case KeyboardKey::LEFT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT_ALT>{});
+                break;
+            case KeyboardKey::RIGHT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::RIGHT_SHIFT>{});
+                break;
+            case KeyboardKey::RIGHT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::RIGHT_CONTROL>{});
+                break;
+            case KeyboardKey::RIGHT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::RIGHT_ALT>{});
+                break;
+            case KeyboardKey::ECS:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::ECS>{});
+                break;
+            default:
+                break;
+        }
+    }
+
+    void publishKeyReleaseEvent(KeyboardKey button) {
+        switch (button) {
+            case KeyboardKey::A:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::A>{});
+                break;
+            case KeyboardKey::D:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::D>{});
+                break;
+            case KeyboardKey::E:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::E>{});
+                break;
+            case KeyboardKey::F:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::F>{});
+                break;
+            case KeyboardKey::L:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::L>{});
+                break;
+            case KeyboardKey::P:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::P>{});
+                break;
+            case KeyboardKey::Q:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::Q>{});
+                break;
+            case KeyboardKey::S:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::S>{});
+                break;
+            case KeyboardKey::W:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::W>{});
+                break;
+            case KeyboardKey::RIGHT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::RIGHT>{});
+                break;
+            case KeyboardKey::LEFT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT>{});
+                break;
+            case KeyboardKey::DOWN:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::DOWN>{});
+                break;
+            case KeyboardKey::UP:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::UP>{});
+                break;
+            case KeyboardKey::LEFT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_SHIFT>{});
+                break;
+            case KeyboardKey::LEFT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_CONTROL>{});
+                break;
+            case KeyboardKey::LEFT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_ALT>{});
+                break;
+            case KeyboardKey::RIGHT_SHIFT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::RIGHT_SHIFT>{});
+                break;
+            case KeyboardKey::RIGHT_CONTROL:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::RIGHT_CONTROL>{});
+                break;
+            case KeyboardKey::RIGHT_ALT:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::RIGHT_ALT>{});
+                break;
+            case KeyboardKey::ECS:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::ECS>{});
                 break;
             default:
                 break;

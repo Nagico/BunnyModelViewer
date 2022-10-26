@@ -4,10 +4,11 @@
 
 #include "Mouse.h"
 
+#include <iostream>
+
 glm::vec2 Mouse::position;
 glm::vec2 Mouse::scroll;
 std::map<MouseButton, bool> Mouse::state;
-Listener Mouse::listener;
 bool Mouse::m_firstMouse;
 EventBus Mouse::m_EventBus;
 
@@ -16,7 +17,10 @@ void Mouse::init(GLFWwindow *window){
     position = glm::vec2(0.0f, 0.0f);
 
     m_EventBus = EventHandler::get().getEventBus();
-    listener = EventHandler::get().getListener();
+
+    for(MouseButton i = MouseButton::LEFT; i <= MouseButton::LAST; i = static_cast<MouseButton>(static_cast<int>(i) + 1)){
+        state[i] = false;
+    }
 
     glfwSetCursorPosCallback(window, cursorPosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -24,16 +28,14 @@ void Mouse::init(GLFWwindow *window){
 }
 
 void Mouse::mouseButtonCallback(GLFWwindow *window, int buttonIn, int action, int mods) {
-    auto button = static_cast<MouseButton>(buttonIn);
+    auto button = toMouseButton(buttonIn);
 
     if (action == GLFW_PRESS) {
-        if (!state[button])
-            EventHandler::get().publishMouseClickHoldEvent(button, position);
-
         state[button] = true;
-        EventHandler::get().publishMouseClickEvent(button, position);
+        EventHandler::get().publishMouseClickHoldEvent(button, position);
     } else if (action == GLFW_RELEASE) {
         state[button] = false;
+        EventHandler::get().publishMouseClickReleaseEvent(button, position);
     }
 }
 
@@ -55,4 +57,12 @@ void Mouse::cursorPosCallback(GLFWwindow *window, double xposIn, double yposIn) 
 
     position = newPos;
     m_EventBus->postpone<event::Mouse::MoveEvent>({offset, position});
+}
+
+void Mouse::checkInLoop() {
+    for (auto &i : state) {
+        if (i.second) {
+            EventHandler::get().publishMouseClickPressEvent(i.first, position);
+        }
+    }
 }

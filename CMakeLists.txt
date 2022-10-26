@@ -75,7 +75,20 @@ add_executable(
         src/util/event/Mouse.h
         src/util/event/Event.h
         src/util/event/enum.h
-        src/util/opengl/Polygon.cpp src/util/opengl/Polygon.h src/util/opengl/PolygonPoint.cpp src/util/opengl/PolygonPoint.h src/util/opengl/PolygonTriangle.cpp src/util/opengl/PolygonTriangle.h)
+        src/util/opengl/Polygon.cpp
+        src/util/opengl/Polygon.h
+        src/util/opengl/PolygonPoint.cpp
+        src/util/opengl/PolygonPoint.h
+        src/util/opengl/PolygonTriangle.cpp
+        src/util/opengl/PolygonTriangle.h
+        src/util/event/enum.cpp
+        src/util/event/Keyboard.cpp
+        src/util/event/Keyboard.h)
+
+target_compile_options(test
+        PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+        $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64")
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")

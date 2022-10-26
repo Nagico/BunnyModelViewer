@@ -12,6 +12,7 @@
 #include "util/event/Mouse.h"
 #include "util/opengl/PolygonPoint.h"
 #include "util/opengl/PolygonTriangle.h"
+#include "util/event/Keyboard.h"
 
 #include <iostream>
 
@@ -62,7 +63,7 @@ struct MODE
     bool fill = true;
     bool line = false;
     bool point = false;
-    bool selected = false;
+    bool select = false;
 };
 
 struct KeyLock
@@ -71,7 +72,7 @@ struct KeyLock
     bool fill = false;
     bool line = false;
     bool point = false;
-    bool selected = false;
+    bool select = false;
 };
 
 MODE mode;
@@ -104,6 +105,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
     Mouse::init(window);
+    Keyboard::init(window);
 
     // tell GLFW to capture our mouse
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -171,8 +173,8 @@ int main()
     selectTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
     highlightTriangle.setVao(bunnyModel.getMeshes()[0].getVao());
 
-    EventHandler::get().addListener([](const event::Mouse::ClickEvent<MouseButton::LEFT>& event) {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+    EventHandler::get().addListener([](const event::Mouse::ClickHoldEvent<MouseButton::LEFT>& event) {
+        if (Keyboard::state[KeyboardKey::LEFT_CONTROL]) {
             if (rayPicker.selectPointValid) {
                 std::cout << "select point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x
                           << ", " << rayPicker.selectPoint.position.y << ", " << rayPicker.selectPoint.position.z
@@ -194,7 +196,7 @@ int main()
     });
 
     EventHandler::get().addListener([](const event::Mouse::ClickHoldEvent<MouseButton::RIGHT>& event) {
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        if (Keyboard::state[KeyboardKey::LEFT_CONTROL]) {
             if (rayPicker.selectPointValid) {
                 auto status = highlightPoint.modifyIndices(rayPicker.selectPointIndex);
                 std::cout << (status ? "" : "un") << "highlight point (" << rayPicker.selectPointIndex << "): " << rayPicker.selectPoint.position.x
@@ -230,6 +232,52 @@ int main()
         camera.ProcessMouseScroll(static_cast<float>(event.offset.y * sensitivity));
     });
 
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::ECS> &event) {
+        glfwSetWindowShouldClose(window, true);
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyHoldEvent<KeyboardKey::F> &event){
+        mode.fill = !mode.fill;
+    });
+    EventHandler::get().addListener([](const event::Keyboard::KeyHoldEvent<KeyboardKey::L> &event){
+        mode.line = !mode.line;
+    });
+    EventHandler::get().addListener([](const event::Keyboard::KeyHoldEvent<KeyboardKey::P> &event){
+        mode.point = !mode.point;
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT_CONTROL> &event){
+        mode.select = true;
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_CONTROL> &event){
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        rayPicker.rayPick(
+                bunnyModel.getMeshes()[0], camera.Position,
+                model, view, projection, (float)Mouse::position.x, (float)Mouse::position.y, width, height);
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_CONTROL> &event){
+        mode.select = false;
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::W> &event){
+        camera.ProcessKeyboard(Camera::FORWARD, deltaTime);
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::S> &event){
+        camera.ProcessKeyboard(Camera::BACKWARD, deltaTime);
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::A> &event){
+        camera.ProcessKeyboard(Camera::LEFT, deltaTime);
+    });
+
+    EventHandler::get().addListener([](const event::Keyboard::KeyPressEvent<KeyboardKey::D> &event){
+        camera.ProcessKeyboard(Camera::RIGHT, deltaTime);
+    });
+
     auto baseModelScale = std::min(SCR_WIDTH, SCR_HEIGHT) * 0.002f / pow(bunnyModel.getMeshes()[0].getMeshInfo().maxDis,1.15);
     std::cout << "baseModelScale: " << baseModelScale << std::endl;
 
@@ -237,16 +285,19 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        EventHandler::get().getEventBus()->process();
         // per-frame time logic
         // --------------------
         auto currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        EventHandler::get().getEventBus()->process();
+        Mouse::checkInLoop();
+        Keyboard::checkInLoop();
+
         // input
         // -----
-        processInput(window);
+        //processInput(window);
 
         // render
         // ------
@@ -256,7 +307,7 @@ int main()
         // title
         // -----
         std::string title;
-        if (mode.selected) title += "[Select] ";
+        if (mode.select) title += "[Select] ";
         title += "LearnOpenGL - ";
         if (mode.fill) title += "Fill ";
         if (mode.line) title += "Line ";
@@ -285,7 +336,7 @@ int main()
         modelColorShader.setValue("pureColor", highlightTriangleColor);
         highlightTriangle.render(-1.25f);
 
-        if (mode.selected)
+        if (mode.select)
         {
             if (rayPicker.selectPointValid)
             {
@@ -375,109 +426,3 @@ int main()
     return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    {
-        if (!keyLock.line)
-        {
-            keyLock.line = true;
-            mode.line = !mode.line;
-        }
-    }
-    else
-    {
-        keyLock.line = false;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-    {
-        if (!keyLock.fill)
-        {
-            keyLock.fill = true;
-            mode.fill = !mode.fill;
-        }
-    }
-    else
-    {
-        keyLock.fill = false;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
-    {
-        if (!keyLock.point)
-        {
-            keyLock.point = true;
-            mode.point = !mode.point;
-        }
-    }
-    else
-    {
-        keyLock.point = false;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    {
-        if (!keyLock.line)
-        {
-            keyLock.line = true;
-            mode.line = !mode.line;
-        }
-    }
-    else
-    {
-        keyLock.line = false;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-    {
-        if (!keyLock.light)
-        {
-            keyLock.light = true;
-            mode.light = !mode.light;
-        }
-    }
-    else
-    {
-        keyLock.light = false;
-    }
-
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-    {
-        if (!keyLock.selected)
-        {
-            keyLock.selected = true;
-            mode.selected = true;
-        }
-        mouse_select(window, Mouse::position.x, Mouse::position.y);
-    }
-    else
-    {
-        keyLock.selected = false;
-        mode.selected = false;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        camera.ProcessKeyboard(Camera::FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        camera.ProcessKeyboard(Camera::BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        camera.ProcessKeyboard(Camera::LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        camera.ProcessKeyboard(Camera::RIGHT, deltaTime);
-}
-
-void mouse_select(GLFWwindow* window, double mouse_xpos, double mouse_ypos)
-{
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    rayPicker.rayPick(
-            bunnyModel.getMeshes()[0], camera.Position,
-            model, view, projection, (float)mouse_xpos, (float)mouse_ypos, width, height);
-}

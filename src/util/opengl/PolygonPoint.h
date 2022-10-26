@@ -12,7 +12,7 @@
 class PolygonPoint : public Polygon {
 public:
     PolygonPoint();
-    PolygonPoint(unsigned int vao);
+    PolygonPoint(unsigned int vao, const vector<VertexData> &vertex);
 
     void setVertex(const vector<VertexData> &vertex);
 

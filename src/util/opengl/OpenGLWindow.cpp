@@ -8,82 +8,78 @@ int OpenGLWindow::m_minor = 3;
 OpenGLWindow::OpenGLProfile OpenGLWindow::m_profile = Core;
 int OpenGLWindow::m_samples = 4;
 
-OpenGLWindow::OpenGLWindow()
+OpenGLWindow::OpenGLWindow(int width, int height)
 {
+    m_width = width;
+    m_height = height;
     initializeWindow();
 }
 
-OpenGLWindow::~OpenGLWindow()
-{
-
-}
+OpenGLWindow::~OpenGLWindow() = default;
 
 void OpenGLWindow::closeCallback(GLFWwindow *window)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->closeEvent();
 }
 
 void OpenGLWindow::focusCallback(GLFWwindow *window, int focused)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->focusEvent(focused);
 }
 
 void OpenGLWindow::minimizeCallback(GLFWwindow *window, int minimized)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->minimizeEvent(minimized);
 }
 
 void OpenGLWindow::posCallback(GLFWwindow* window, int xpos, int ypos)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->posEvent(xpos, ypos);
 }
 
 void OpenGLWindow::updateCallback(GLFWwindow* window)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->updateEvent();
 }
 
 void OpenGLWindow::resizeCallback(GLFWwindow *window, int width, int height)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->resizeEvent(width, height);
 }
 
 void OpenGLWindow::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->keyEvent(key, scancode, action, mods);
 }
 
 void OpenGLWindow::mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->mouseScrollEvent(xoffset, yoffset);
 }
 
 void OpenGLWindow::mouseMoveCallBack(GLFWwindow *window, double xpos, double ypos)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->mouseMoveEvent(xpos, ypos);
 }
 
 void OpenGLWindow::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
-    if (action == GLFW_PRESS)
-        _this->mousePressedEvent(button, mods);
-    else if (action == GLFW_RELEASE)
-        _this->mouseReleasedEvent(button, mods);
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    _this->mouseButtonEvent(button, action, mods);
 }
 
 void OpenGLWindow::charCallback(GLFWwindow* window, unsigned int codepoint)
 {
-    OpenGLWindow *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
+    auto *_this = static_cast<OpenGLWindow *>(glfwGetWindowUserPointer(window));
     _this->charEvent(codepoint);
 }
 
@@ -95,7 +91,14 @@ void OpenGLWindow::initializeWindow()
     glfwWindowHint(GLFW_OPENGL_PROFILE, m_profile);
     glfwWindowHint(GLFW_SAMPLES, m_samples);
 
-    m_window = glfwCreateWindow(600, 500, m_title.c_str(), nullptr, nullptr);
+    m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), nullptr, nullptr);
+    if (m_window == nullptr)
+    {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return;
+    }
+
     glfwSetWindowUserPointer(m_window, this);
 
     glfwSetWindowCloseCallback(m_window, closeCallback);
@@ -124,7 +127,7 @@ glm::vec2 OpenGLWindow::getCursorPos() const
     double xpos, ypos;
     glfwGetCursorPos(m_window, &xpos, &ypos);
 
-    return glm::vec2(xpos, ypos);
+    return {xpos, ypos};
 }
 
 
@@ -164,8 +167,6 @@ void OpenGLWindow::setCursorMode(CursorMode mode)
 
 void OpenGLWindow::exec()
 {
-    //窗口启动时需要发送一个大小事件
-    resizeEvent(600, 500);
 #ifdef _WIN32
     m_lastTime = ::GetTickCount64();
 #else
@@ -175,27 +176,33 @@ void OpenGLWindow::exec()
     {
         static unsigned int frame = 0;
         frame++;
-        render();
-        glfwSwapBuffers(m_window);
 
 #ifdef _WIN32
-        if (::GetTickCount64() - m_lastTime >= 1000)
-        {
-            m_lastTime = ::GetTickCount64();
+        auto now = ::GetTickCount64();
 #else
-            if (glfwGetTime() - m_lastTime > 1.0000)
-		{
-			m_lastTime = glfwGetTime();
+        auto now = glfwGetTime();
 #endif
+        auto deltaTime = now - m_lastTime;
+        m_lastTime = now;
+
+        if (deltaTime >= 1000)
+        {
             m_fps = frame;
             frame = 0;
-            setWindowTitle(m_title);
         }
+        setWindowTitle(m_title);
+
+        render((float)deltaTime / 1000.0f);
+        glfwSwapBuffers(m_window);
+
         glfwPollEvents();
     }
+
+    glfwTerminate();
 }
 
 void OpenGLWindow::close()
 {
     glfwSetWindowShouldClose(m_window, true);
 }
+

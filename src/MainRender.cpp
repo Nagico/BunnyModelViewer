@@ -2,233 +2,392 @@
 #include "util/opengl/Camera.h"
 #include "util/opengl/Image.h"
 #include "util/opengl/Model.h"
+#include "util/opengl/PolygonPoint.h"
+#include "util/opengl/PolygonTriangle.h"
+#include "util/RayPicker.h"
+#include "util/event/Event.h"
+#include "util/event/Mouse.h"
+#include "util/event/Keyboard.h"
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/random.hpp>
 
-//生成10个随机的位置
-static glm::vec3 modelPosition[10];
 
-MainRender::MainRender(Camera *camera)
+MainRender::MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboard *keyboard)
 {
-    srand((unsigned int)time(0));
+    modelLoaded = false;
+    m_deltaTime = .0f;
 
+    m_window = window;
     m_camera = camera;
-//    m_lightColor[0] = glm::vec3(1.0f, 1.0f, 1.0f);
-//    m_lightColor[1] = glm::vec3(1.0f, 1.0f, 1.0f);
-//    m_lightColor[2] = glm::vec3(1.0f, 1.0f, 0.0f);
-//    m_lightColor[3] = glm::vec3(0.0f, 1.0f, 1.0f);
-//    m_lightColor[4] = glm::vec3(1.0f, 0.0f, 0.0f);
-//    m_lightColor[5] = glm::vec3(1.0f, 0.0f, 1.0f);
-//    for (int i = 0; i < 10; i++)
-//        modelPosition[i] = 5.0f * glm::ballRand(1.0f);
+    m_mouse = mouse;
+    m_keyboard = keyboard;
+
+    // 初始化色彩
+    m_lineColor = new glm::vec4(0.12156863f, 0.8862745f, 0.6039216f, 1.f);
+    m_pointColor = new glm::vec4(0.35686275f, 0.078431375f, 0.83137256f, 0.01f);
+    m_selectPointColor = new glm::vec4(0.05882353f, 0.73333335f, 0.8352941f, 1.f);
+    m_selectTriangleColor = new glm::vec4(0.82156863f, 0.0862745f, 0.2039216f, 1.f);
+    m_highlightPointColor = new glm::vec4(0.02156863f, 0.9862745f, 0.9039216f, 1.f);
+    m_highlightTriangleColor = new glm::vec4(0.6901961f, 0.14117648f, 0.8980392f, 1.f);
+
+    // 初始化灯
+    m_lampPos = new glm::vec3(3.f, 5.f, 1.f);
+    m_lampModelMatrix = glm::mat4(1.f);
+    m_lampModelMatrix = glm::translate(m_lampModelMatrix, *m_lampPos);
+    m_lampModelMatrix = glm::scale(m_lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+
+    // 初始化矩阵
+    m_projectionMatrix = glm::perspective(
+            glm::radians(m_camera->Zoom),
+            (float)m_width / (float)m_height,
+            NEAR_PLANE, FAR_PLANE);
+    m_viewMatrix = m_camera->GetViewMatrix();
+
     initializeGL();
+    initializeEvent();
 }
 
 MainRender::~MainRender()
 {
-    if (m_model) delete m_model;
-    glDeleteVertexArrays(1, &m_lampVao);
-    glDeleteBuffers(1, &m_vbo);
-    glDeleteBuffers(1, &m_ebo);
+    unloadModel();
+
+    delete m_lampModel;
+    delete rayPicker;
+
+    delete m_lineColor;
+    delete m_pointColor;
+    delete m_selectPointColor;
+    delete m_selectTriangleColor;
+    delete m_highlightPointColor;
+    delete m_highlightTriangleColor;
+
+    delete m_lampPos;
 }
 
-void MainRender::render()
+void MainRender::render(float deltaTime)
 {
-//    static float angle = 0.0f;
-//    angle += 0.01f;
-//    glm::vec3 lightRotation = glm::vec3((sin(angle) + 1.0f) / 2.0f + 0.1f,
-//                                        (cos(1.7f * angle) + 1.0f) / 2.0f + 0.1f,
-//                                        (sin(2.9f * angle) + 1.0f) / 2.0f + 0.1f);
-//    static glm::vec4 lightPosition[6] =
-//            {
-//                    //0，1用来占位的
-//                    glm::vec4(0.0f),
-//                    glm::vec4(0.0f),
-//                    glm::vec4(5.7f, 0.2f, 1.0f, 1.0f),
-//                    glm::vec4(6.3f, -2.3f, -3.0f, 1.0f),
-//                    glm::vec4(-2.0f, 5.0f, -3.0f, 1.0f),
-//                    glm::vec4(0.0f, 0.0f, -7.0f, 1.0f)
-//            };
-//
-//    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//    //绘制模型
-//    {
-//        glm::mat4 modelMatrix(1.0f);
-//        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
-//        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.2f));
-//
-//        glm::mat3 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-//        //设置顶点着色器的uniform
-//        m_modelProgram.use();
-//        m_modelProgram.setValue("normalMatrix", normalMatrix);
-//        m_modelProgram.setValue("model", modelMatrix);
-//        m_modelProgram.setValue("view", m_camera->getViewMatrix());
-//        m_modelProgram.setValue("projection", m_projection);
-//
-//        //设置片元着色器的uniform
-//        m_modelProgram.setValue("viewPos", m_camera->getCameraPos());
-//        m_modelProgram.setValue("lights[0].position", m_camera->getCameraPos());
-//        m_modelProgram.setValue("lights[0].direction", m_camera->getCameraFront());
-//        m_modelProgram.setValue("lights[0].cutOff", glm::cos(glm::radians(12.0f)));
-//        m_modelProgram.setValue("lights[0].outerCutOff", glm::cos(glm::radians(14.5f)));
-//        m_modelProgram.setValue("lights[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-//        m_modelProgram.setValue("lights[0].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-//        m_modelProgram.setValue("lights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-//        m_modelProgram.setValue("lights[0].constant", 1.0f);
-//        m_modelProgram.setValue("lights[0].linear", 0.09f);
-//        m_modelProgram.setValue("lights[0].quadratic", 0.032f);
-//
-//        m_modelProgram.setValue("lights[1].direction", glm::vec3(0.0f, 10.0f, 0.0f));
-//        m_modelProgram.setValue("lights[1].ambient", glm::vec3(0.1f, 0.1f, 0.1f));
-//        m_modelProgram.setValue("lights[1].diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
-//        m_modelProgram.setValue("lights[1].specular", glm::vec3(0.8f, 0.8f, 0.8f));
-//
-//        for (int i = 2; i < 6; i++)
-//        {
-//            glm::mat4 lightMatrix(1.0f);
-//            lightMatrix = glm::rotate(lightMatrix, 0.008f, lightRotation);
-//            lightPosition[i] = lightMatrix * lightPosition[i];
-//            string num = std::to_string(i);
-//            m_modelProgram.setValue("lights[" + num + "].position", glm::vec3(lightPosition[i]));
-//            m_modelProgram.setValue("lights[" + num + "].ambient", 0.05f * m_lightColor[i]);
-//            m_modelProgram.setValue("lights[" + num + "].diffuse", 0.5f * m_lightColor[i]);
-//            m_modelProgram.setValue("lights[" + num + "].specular", 1.0f * m_lightColor[i]);
-//            m_modelProgram.setValue("lights[" + num + "].constant", 1.0f);
-//            m_modelProgram.setValue("lights[" + num + "].linear", 0.09f);
-//            m_modelProgram.setValue("lights[" + num + "].quadratic", 0.032f);
-//        }
-//
-//        m_model->render(&m_modelProgram);
-//    }
-//
-//    //绘制灯
-//    for (int i = 2; i < 6; i++)
-//    {
-//        m_lampProgram[i].use();
-//        glm::mat4 modelMatrix(1.0f);
-//        modelMatrix = glm::translate(modelMatrix, glm::vec3(lightPosition[i]));
-//        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.06f));
-//
-//        m_lampProgram[i].setValue("model", modelMatrix);
-//        m_lampProgram[i].setValue("view", m_camera->getViewMatrix());
-//        m_lampProgram[i].setValue("projection", m_projection);
-//
-//        glBindVertexArray(m_lampVao);
-//        glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
-//    }
+    m_deltaTime = deltaTime;
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    m_projectionMatrix = glm::perspective(
+            glm::radians(m_camera->Zoom),
+            (float)m_width / (float)m_height,
+            NEAR_PLANE, FAR_PLANE);
+    m_viewMatrix = m_camera->GetViewMatrix();
+
+    if (modelLoaded) {
+        renderHighlight();
+        if (mode.select) renderSelect();
+        if (mode.fill) renderFill();
+        if (mode.line) renderLine();
+        if (mode.point) renderPoint();
+    }
+
+    if (mode.lamp) renderLamp();
+}
+
+void MainRender::renderHighlight() {
+    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    m_modelColorShader.setValue("pureColor", *m_highlightPointColor);
+    m_highlightPoint->render(-1.15f, 5.0f);
+
+    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    m_modelColorShader.setValue("pureColor", *m_highlightTriangleColor);
+    m_highlightTriangle->render(-1.25f);
+}
+
+void MainRender::renderSelect() {
+    if (rayPicker->selectPointValid)
+    {
+        m_selectPoint->resetIndices(rayPicker->selectPointIndex);
+        m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+        m_modelColorShader.setValue("pureColor", *m_selectPointColor);
+        m_selectPoint->render(-1.1f, 5.0f);
+
+    }
+    else if (rayPicker->selectFaceValid)
+    {
+        m_selectTriangle->resetIndices(
+                rayPicker->selectFaceIndex[0],
+                rayPicker->selectFaceIndex[1],
+                rayPicker->selectFaceIndex[2]);
+        m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+        m_modelColorShader.setValue("pureColor", *m_selectTriangleColor);
+        m_selectTriangle->render(-1.1f);
+    }
+}
+
+void MainRender::renderFill() {
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
+    // don't forget to enable shader before setting uniforms
+    m_modelShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    m_modelShader.setValue("lightPos", *m_lampPos);
+    m_modelShader.setValue("viewPos", m_camera->Position);
+
+    m_modelShader.setValue("light.ambient", 0.3f, 0.3f, 0.3f);
+    m_modelShader.setValue("light.diffuse", 0.5f, 0.5f, 0.5f);
+    m_modelShader.setValue("light.specular", 1.0f, 1.0f, 1.0f);
+
+    m_modelShader.setValue("light.constant", 1.0f);
+    m_modelShader.setValue("light.linear", 0.09f);
+    m_modelShader.setValue("light.quadratic", 0.032f);
+
+    m_modelShader.setValue("material.shininess", 64.0f);
+
+    m_model->render(&m_modelShader, false);
+}
+
+void MainRender::renderLine() {
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);//将绘制模式改为线
+    glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
+    glLineWidth(1.0f);
+    glPolygonOffset(-1.0f,-1.0f);//设置多边形偏移量
+    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    m_modelColorShader.setValue("pureColor", *m_lineColor);
+    m_model->render(&m_modelColorShader);
+    glDisable(GL_POLYGON_OFFSET_LINE);//关闭多边形偏移
+}
+
+void MainRender::renderPoint() {
+    glPolygonMode(GL_FRONT_AND_BACK,GL_POINT);//将绘制模式改为点
+    glEnable(GL_POLYGON_OFFSET_POINT);//开启多边形偏移
+    glPolygonOffset(-1.5f,-1.5f);//设置多边形偏移量
+    glPointSize(2.5f);
+    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    m_modelColorShader.setValue("pureColor", *m_pointColor);
+    m_model->render(&m_modelColorShader);
+    glDisable(GL_POLYGON_OFFSET_POINT);//关闭多边形偏移
+}
+
+void MainRender::renderLamp() {
+    m_lampShader.use();
+    m_lampShader.setValue("projection", m_projectionMatrix);
+    m_lampShader.setValue("view", m_viewMatrix);
+    m_lampShader.setValue("model", m_lampModelMatrix);
+    m_lampModel->render(&m_lampShader);
 }
 
 void MainRender::resizeGL(int w, int h)
 {
+    m_width = w;
+    m_height = h;
     GLfloat aspect = (GLfloat)w / (GLfloat)h;
-    m_projection = glm::perspective(glm::radians(45.0f), aspect, 1.0f, 40.0f);
+    m_projectionMatrix = glm::perspective(glm::radians(m_camera->Zoom), aspect, NEAR_PLANE, FAR_PLANE);
 }
 
-void MainRender::initializeGL()
-{
+void MainRender::initializeGL() {
     initializeShader();
     initializeModel();
-    initializeLight();
+    initializeRayPicker();
 
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 }
 
-void MainRender::initializeShader()
-{
-//    if (!m_modelProgram.addShaderFile(ShaderProgram::Vertex, "assets/shader/vertex_glsl.vert"))
-//        std::cout << m_modelProgram.lastError();
-//    if (!m_modelProgram.addShaderFile(ShaderProgram::Fragment, "assets/shader/fragment_glsl.frag"))
-//        std::cout << m_modelProgram.lastError();
-//
-//    if (!m_modelProgram.link())
-//        std::cout << m_modelProgram.lastError();
-//
-//    m_modelProgram.use();
-//    m_modelProgram.setValue("shininess", 64.0f);
-//
-//    //创建六个灯光着色器程序
-//    for (int i = 0; i < 6; i++)
-//    {
-//        if (!m_lampProgram[i].addShaderFile(ShaderProgram::Vertex, "assets/shader/lamp_vertex_glsl.vert"))
-//            std::cout << m_lampProgram[i].lastError();
-//        if (!m_lampProgram[i].addShaderFile(ShaderProgram::Fragment, "assets/shader/lamp_fragment_glsl.frag"))
-//            std::cout << m_lampProgram[i].lastError();
-//
-//        if (!m_lampProgram[i].link())
-//            std::cout << m_lampProgram[i].lastError();
-//
-//        m_lampProgram[i].use();
-//        m_lampProgram[i].setValue("lightColor", m_lightColor[i]);
-//    }
+void MainRender::initializeShader() {
+#pragma omp parallel
+#pragma omp sections
+    {
+#pragma omp section
+        {
+            m_modelShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_fragment.glsl");
+        }
+#pragma omp section
+        {
+            m_modelColorShader.load("assets/shader/model_vertex.glsl", "assets/shader/model_color_fragment.glsl");
+        }
+#pragma omp section
+        {
+            m_lampShader.load("assets/shader/lamp_vertex.glsl", "assets/shader/lamp_fragment.glsl");
+        }
+    }
 }
 
-void MainRender::initializeModel()
-{
-//    m_model = new Model("assets/model/nanosuit/nanosuit.obj");
+void MainRender::initializeModel() {
+    m_lampModel = new Model("assets/model/sphere.ply");
 }
 
-void MainRender::initializeLight()
-{
-//    glm::vec3 vertices[] =
-//            {
-//                    { glm::vec3(-0.75f, -0.75f, 0.75f)  },
-//                    { glm::vec3(0.75f, -0.75f, 0.75f)   },
-//                    { glm::vec3(-0.375f, 0.75f, 0.375f) },
-//                    { glm::vec3(0.375f, 0.75f, 0.375f)  },
-//
-//                    { glm::vec3(0.75f, -0.75f, 0.75f)   },
-//                    { glm::vec3(0.75f, -0.75f, -0.75f)  },
-//                    { glm::vec3(0.375f, 0.75f, 0.375f)  },
-//                    { glm::vec3(0.375f, 0.75f, -0.375f) },
-//
-//                    { glm::vec3(0.75f, -0.75f, -0.75f)  },
-//                    { glm::vec3(-0.75f, -0.75f, -0.75f) },
-//                    { glm::vec3(0.375f, 0.75f, -0.375f) },
-//                    { glm::vec3(-0.375f, 0.75f, -0.375f)},
-//
-//                    { glm::vec3(-0.75f, -0.75f, -0.75f) },
-//                    { glm::vec3(-0.75f, -0.75f, 0.75f)  },
-//                    { glm::vec3(-0.375f, 0.75f, -0.375f)},
-//                    { glm::vec3(-0.375f, 0.75f, 0.375f) },
-//
-//                    { glm::vec3(-0.375f, 0.75f, 0.375f) },
-//                    { glm::vec3(0.375f, 0.75f, 0.375f)  },
-//                    { glm::vec3(-0.375f, 0.75f, -0.375f)},
-//                    { glm::vec3(0.375f, 0.75f, -0.375f) },
-//
-//                    { glm::vec3(0.75f, -0.75f, 0.75f)   },
-//                    { glm::vec3(-0.75f, -0.75f, 0.75f)  },
-//                    { glm::vec3(0.75f, -0.75f, -0.75f)  },
-//                    { glm::vec3(-0.75f, -0.75f, -0.75f) }
-//            };
-//
-//    GLushort indices[] =
-//            {
-//                    0, 1, 2, 3, 3,
-//                    4, 4, 5, 6, 7, 7,
-//                    8, 8, 9, 10, 11, 11,
-//                    12, 12, 13, 14, 15, 15,
-//                    16, 16, 17, 18, 19, 19,
-//                    20, 20, 21, 22, 23
-//            };
-//    glGenVertexArrays(1, &m_lampVao);
-//    glBindVertexArray(m_lampVao);
-//
-//    glGenBuffers(1, &m_vbo);
-//    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-//
-//    glGenBuffers(1, &m_ebo);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-//
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(glm::vec3), (void *)0);
-//    glEnableVertexAttribArray(0);
+void MainRender::initializeRayPicker() {
+    rayPicker = new RayPicker();
+}
+
+void MainRender::initializeEvent() {
+    auto &handler = EventHandler::get();
+
+    initializeRayPickerEvent(handler);
+    initializeCameraEvent(handler);
+    initializeModeChangeEvent(handler);
+}
+
+void MainRender::initializeRayPickerEvent(EventHandler& handler) {
+    // Ctrl+左键 输出当前选中几何元素信息
+    handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::LEFT>& event) {
+        if (m_keyboard->state[KeyboardKey::LEFT_CONTROL]) {
+            if (rayPicker->selectPointValid) {
+                // TODO: 事件驱动，自定义内容
+                std::cout << "select point (" << rayPicker->selectPointIndex << "): "
+                    << rayPicker->selectPoint.position.x << ", " << rayPicker->selectPoint.position.y << ", "
+                    << rayPicker->selectPoint.position.z << std::endl;
+            }
+            else if (rayPicker->selectFaceValid) {
+                // TODO: 事件驱动，自定义内容
+                std::cout << "select face: " << std::endl;
+                for (int i = 0; i < 3; i++) {
+                    std::cout << "\t point (" << rayPicker->selectFaceIndex[i] << "): "
+                              << rayPicker->selectFace[i].position.x << ", " << rayPicker->selectFace[i].position.y
+                              << ", " << rayPicker->selectFace[i].position.z << std::endl;
+                }
+
+            } else {
+                std::cout << "select nothing" << std::endl;
+            }
+
+        }
+    });
+
+    // Ctrl+右键 高亮/取消高亮当前元素
+    handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::RIGHT>& event) {
+        if (m_keyboard->state[KeyboardKey::LEFT_CONTROL]) {
+            if (rayPicker->selectPointValid) {
+                // TODO: 事件驱动，自定义内容
+                auto status = m_highlightPoint->modifyIndices(rayPicker->selectPointIndex);
+                std::cout << (status ? "" : "un") << "highlight point (" << rayPicker->selectPointIndex << "): "
+                    << rayPicker->selectPoint.position.x << ", " << rayPicker->selectPoint.position.y << ", "
+                    << rayPicker->selectPoint.position.z << std::endl;
+            }
+            else if (rayPicker->selectFaceValid) {
+                // TODO: 事件驱动，自定义内容
+                auto status = m_highlightTriangle->modifyIndices(
+                        rayPicker->selectFaceIndex[0],
+                        rayPicker->selectFaceIndex[1],
+                        rayPicker->selectFaceIndex[2]);
+                std::cout << (status ? "" : "un") << "highlight face: " << std::endl;
+                for (int i = 0; i < 3; i++) {
+                    std::cout << "\t point (" << rayPicker->selectFaceIndex[i] << "): "
+                              << rayPicker->selectFace[i].position.x << ", " << rayPicker->selectFace[i].position.y
+                              << ", " << rayPicker->selectFace[i].position.z << std::endl;
+                }
+
+            } else {
+                std::cout << "highlight nothing" << std::endl;
+            }
+
+        }
+    });
+
+    // Ctrl 预览当前选中元素
+    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_CONTROL> &event){
+        if (modelLoaded) {
+            rayPicker->rayPick(
+                    m_model->getMeshes()[0], m_camera->Position,
+                    m_modelMatrix, m_viewMatrix, m_projectionMatrix,
+                    (float)m_mouse->position.x, (float)m_mouse->position.y, m_width, m_height);
+
+        }
+    });
+}
+
+void MainRender::initializeCameraEvent(EventHandler& handler) {
+    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::W> &event){
+        m_camera->ProcessKeyboard(Camera::FORWARD, m_deltaTime);
+    });
+
+    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::S> &event){
+        m_camera->ProcessKeyboard(Camera::BACKWARD, m_deltaTime);
+    });
+
+    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::A> &event){
+        m_camera->ProcessKeyboard(Camera::LEFT, m_deltaTime);
+    });
+
+    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::D> &event){
+        m_camera->ProcessKeyboard(Camera::RIGHT, m_deltaTime);
+    });
+}
+
+void MainRender::initializeModeChangeEvent(EventHandler& handler) {
+    // F 开关模型填充
+    handler.addListener([this](const event::Keyboard::KeyHoldEvent<KeyboardKey::F> &event){
+        mode.fill = !mode.fill;
+    });
+
+    // L 开关模型线框
+    handler.addListener([this](const event::Keyboard::KeyHoldEvent<KeyboardKey::L> &event){
+        mode.line = !mode.line;
+    });
+
+    // P 开关模型点
+    handler.addListener([this](const event::Keyboard::KeyHoldEvent<KeyboardKey::P> &event){
+        mode.point = !mode.point;
+    });
+
+    // Ctrl 进入选择模式
+    handler.addListener([this](const event::Keyboard::KeyHoldEvent<KeyboardKey::LEFT_CONTROL> &event){
+        mode.select = true;
+    });
+    handler.addListener([this](const event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_CONTROL> &event){
+        mode.select = false;
+    });
+}
+
+void MainRender::loadModel(const string &path) {
+    if (modelLoaded) {  // 释放之前的模型
+        delete m_model;
+        delete m_selectPoint;
+        delete m_selectTriangle;
+        delete m_highlightPoint;
+        delete m_highlightTriangle;
+
+        modelLoaded = false;
+    }
+
+    try {
+        m_model = new Model(path);
+    }
+    catch (std::runtime_error &ex) {
+        std::cerr << ex.what() << std::endl;
+        return;
+    }
+
+    if (m_model->getMeshes().empty()) {
+        std::cerr << "Model is empty" << std::endl;
+        return;
+    }
+    modelName = path.substr(path.find_last_of('/') + 1);
+
+    // 加载几何模型
+    auto vao = m_model->getMeshes()[0].getVao();
+    auto vertices = m_model->getMeshes()[0].getVertices();
+
+    m_selectPoint = new PolygonPoint(vao, vertices);
+    m_selectTriangle = new PolygonTriangle(vao);
+    m_highlightPoint = new PolygonPoint(vao, vertices);
+    m_highlightTriangle = new PolygonTriangle(vao);
+
+    // 模型自动缩放
+    auto baseModelScale = std::min((float)m_width, (float)m_height) * 0.002f / pow(m_model->getMeshes()[0].getMeshInfo().maxDis,1.15);
+
+    // 重置模型矩阵
+    m_modelMatrix = glm::mat4(1.0f);
+    m_modelMatrix = glm::translate(m_modelMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
+    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(10.f));
+
+    modelLoaded = true;
+}
+
+void MainRender::unloadModel() {
+    if (modelLoaded) {
+        delete m_model;
+        delete m_selectPoint;
+        delete m_selectTriangle;
+        delete m_highlightPoint;
+        delete m_highlightTriangle;
+
+        modelLoaded = false;
+    }
 }

@@ -4,30 +4,19 @@
 
 #include "Mouse.h"
 
-#include <iostream>
-
-glm::vec2 Mouse::position;
-glm::vec2 Mouse::scroll;
-std::map<MouseButton, bool> Mouse::state;
-bool Mouse::m_firstMouse;
-EventBus Mouse::m_EventBus;
-
-void Mouse::init(GLFWwindow *window){
+Mouse::Mouse(){
     m_firstMouse = true;
     position = glm::vec2(0.0f, 0.0f);
+    scroll = glm::vec2(0.0f, 0.0f);
 
     m_EventBus = EventHandler::get().getEventBus();
 
     for(MouseButton i = MouseButton::LEFT; i <= MouseButton::LAST; i = static_cast<MouseButton>(static_cast<int>(i) + 1)){
         state[i] = false;
     }
-
-    glfwSetCursorPosCallback(window, cursorPosCallback);
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
-    glfwSetScrollCallback(window, scrollCallback);
 }
 
-void Mouse::mouseButtonCallback(GLFWwindow *window, int buttonIn, int action, int mods) {
+void Mouse::mouseButtonCallback(int buttonIn, int action, int mods) {
     auto button = toMouseButton(buttonIn);
 
     if (action == GLFW_PRESS) {
@@ -39,13 +28,13 @@ void Mouse::mouseButtonCallback(GLFWwindow *window, int buttonIn, int action, in
     }
 }
 
-void Mouse::scrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
+void Mouse::scrollCallback(double xoffset, double yoffset) {
     auto offset = glm::vec2(xoffset, yoffset);
     scroll += offset;
     m_EventBus->postpone<event::Mouse::ScrollEvent>({offset, scroll});
 }
 
-void Mouse::cursorPosCallback(GLFWwindow *window, double xposIn, double yposIn) {
+void Mouse::cursorPosCallback(double xposIn, double yposIn) {
     auto newPos = glm::vec2(xposIn, yposIn);
     if (m_firstMouse) {
         position = newPos;
@@ -59,7 +48,7 @@ void Mouse::cursorPosCallback(GLFWwindow *window, double xposIn, double yposIn) 
     m_EventBus->postpone<event::Mouse::MoveEvent>({offset, position});
 }
 
-void Mouse::checkInLoop() {
+void Mouse::update() {
     for (auto &i : state) {
         if (i.second) {
             EventHandler::get().publishMouseClickPressEvent(i.first, position);

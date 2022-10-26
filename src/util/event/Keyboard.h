@@ -12,15 +12,14 @@
 
 class Keyboard {
 public:
-    static void init(GLFWwindow *window);
-    static void checkInLoop();
+    Keyboard();
+    void update();
+    void keyCallback(int key, int scancode, int action, int mods);
 
-    static std::map<KeyboardKey, bool> state;
+    std::map<KeyboardKey, bool> state;
 
 private:
-    static EventBus m_EventBus;
-
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    EventBus m_EventBus;
 };
 
 

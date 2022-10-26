@@ -4,20 +4,16 @@
 
 #include "Keyboard.h"
 
-std::map<KeyboardKey, bool> Keyboard::state;
-EventBus Keyboard::m_EventBus;
 
-void Keyboard::init(GLFWwindow *window) {
+Keyboard::Keyboard() {
     m_EventBus = EventHandler::get().getEventBus();
 
     for(KeyboardKey i = KeyboardKey::A; i <= KeyboardKey::LAST; i = static_cast<KeyboardKey>(static_cast<int>(i) + 1)){
         state[i] = false;
     }
-
-    glfwSetKeyCallback(window, keyCallback);
 }
 
-void Keyboard::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+void Keyboard::keyCallback(int key, int scancode, int action, int mods) {
     auto keyboardKey = toKeyboardKey(key);
 
     if (action == GLFW_PRESS) {
@@ -29,7 +25,7 @@ void Keyboard::keyCallback(GLFWwindow *window, int key, int scancode, int action
     }
 }
 
-void Keyboard::checkInLoop() {
+void Keyboard::update() {
     for(auto &i : state){
         if(i.second){
             EventHandler::get().publishKeyPressEvent(i.first);

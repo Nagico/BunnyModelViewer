@@ -49,8 +49,10 @@ void Model::loadModel(const string &path)
      */
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        // std::cerr << importer.GetErrorString() << std::endl;
         throw std::runtime_error(importer.GetErrorString());
-
+    }
     m_directory = path.substr(0, path.find_last_of("//"));  // 获取模型所在目录
     processNode(scene->mRootNode, scene);  // 递归处理节点
 }

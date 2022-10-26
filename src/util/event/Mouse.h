@@ -11,20 +11,22 @@
 
 class Mouse {
 public:
-    static void init(GLFWwindow *window);
-    static void checkInLoop();
+    Mouse();
 
-    static glm::vec2 position;
-    static glm::vec2 scroll;
-    static std::map<MouseButton, bool> state;
+    void update();
+
+    glm::vec2 position{};
+    glm::vec2 scroll{};
+    std::map<MouseButton, bool> state;
+
+    void cursorPosCallback(double xposIn, double yposIn);
+    void mouseButtonCallback(int buttonIn, int action, int mods);
+    void scrollCallback(double xoffset, double yoffset);
 
 private:
-    static void cursorPosCallback(GLFWwindow* window, double xposIn, double yposIn);
-    static void mouseButtonCallback(GLFWwindow* window, int buttonIn, int action, int mods);
-    static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-    static bool m_firstMouse;
-    static EventBus m_EventBus;
+    bool m_firstMouse;
+    EventBus m_EventBus;
 
 };
 

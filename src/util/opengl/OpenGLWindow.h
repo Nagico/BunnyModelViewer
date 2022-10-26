@@ -23,7 +23,7 @@ public:
     };
 
 public:
-    OpenGLWindow();
+    OpenGLWindow(int width = 800, int height = 600);
     virtual ~OpenGLWindow();
 
     void initializeWindow();
@@ -42,7 +42,7 @@ public:
     static void setSamples(int samples);
 
 protected:
-    virtual void render() { }
+    virtual void render(float deltaTime) { }
 
     virtual void closeEvent() { }
     virtual void focusEvent(int focused) { }
@@ -53,8 +53,7 @@ protected:
     virtual void keyEvent(int key, int scancode, int action, int mods) { }
     virtual void mouseScrollEvent(double xoffset, double yoffset) { }
     virtual void mouseMoveEvent(double xpos, double ypos) { }
-    virtual void mousePressedEvent(int button, int mods) { }
-    virtual void mouseReleasedEvent(int button, int mods) { }
+    virtual void mouseButtonEvent(int button, int action, int mods) { }
     virtual void charEvent(unsigned int codepoint) { }
 
 private:
@@ -76,7 +75,7 @@ private:
     static OpenGLProfile m_profile;
     static int m_samples;
 
-private:
+protected:
 #ifdef _WIN32
     unsigned long long m_lastTime = 0;
 #else
@@ -85,6 +84,9 @@ private:
     unsigned int m_fps = 0;
     string m_title = "OpenGL Window";
     GLFWwindow *m_window = nullptr;
+
+    int m_width = 800;
+    int m_height = 600;
 };
 
 #endif

@@ -5,8 +5,10 @@
 class OpenGLRender
 {
 public:
-    virtual void render() = 0;
+    virtual void render(float deltaTime) = 0;
     virtual void resizeGL(int w, int h) = 0;
+
+public:
     virtual void initializeGL() = 0;
     virtual void initializeShader() = 0;
 };

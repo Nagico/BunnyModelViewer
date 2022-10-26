@@ -4,8 +4,8 @@
 
 #include "PolygonPoint.h"
 
-PolygonPoint::PolygonPoint(unsigned int vao) : Polygon(vao) {
-
+PolygonPoint::PolygonPoint(unsigned int vao, const vector<VertexData> &vertex) : Polygon(vao) {
+    m_vertex = vertex;
 }
 
 void PolygonPoint::addIndices(unsigned int index0, unsigned int index1, unsigned int index2) {

@@ -1,6 +1,7 @@
 ﻿#include "Model.h"
 #include "Image.h"
 #include <iostream>
+#include <cfloat>
 #include "glad/glad.h"
 
 

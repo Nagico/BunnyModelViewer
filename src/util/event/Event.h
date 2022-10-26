@@ -136,6 +136,9 @@ public:
             case KeyboardKey::A:
                 m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::A>{});
                 break;
+            case KeyboardKey::C:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::C>{});
+                break;
             case KeyboardKey::D:
                 m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::D>{});
                 break;
@@ -153,6 +156,9 @@ public:
                 break;
             case KeyboardKey::Q:
                 m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::Q>{});
+                break;
+            case KeyboardKey::R:
+                m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::R>{});
                 break;
             case KeyboardKey::S:
                 m_EventBus->postpone(event::Keyboard::KeyPressEvent<KeyboardKey::S>{});
@@ -203,6 +209,9 @@ public:
             case KeyboardKey::A:
                 m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::A>{});
                 break;
+            case KeyboardKey::C:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::C>{});
+                break;
             case KeyboardKey::D:
                 m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::D>{});
                 break;
@@ -220,6 +229,9 @@ public:
                 break;
             case KeyboardKey::Q:
                 m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::Q>{});
+                break;
+            case KeyboardKey::R:
+                m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::R>{});
                 break;
             case KeyboardKey::S:
                 m_EventBus->postpone(event::Keyboard::KeyHoldEvent<KeyboardKey::S>{});
@@ -270,6 +282,9 @@ public:
             case KeyboardKey::A:
                 m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::A>{});
                 break;
+            case KeyboardKey::C:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::C>{});
+                break;
             case KeyboardKey::D:
                 m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::D>{});
                 break;
@@ -287,6 +302,9 @@ public:
                 break;
             case KeyboardKey::Q:
                 m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::Q>{});
+                break;
+            case KeyboardKey::R:
+                m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::R>{});
                 break;
             case KeyboardKey::S:
                 m_EventBus->postpone(event::Keyboard::KeyReleaseEvent<KeyboardKey::S>{});

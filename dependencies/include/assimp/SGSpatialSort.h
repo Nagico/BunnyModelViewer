@@ -121,7 +121,7 @@ protected:
     // -------------------------------------------------------------------
     struct Entry {
         unsigned int mIndex;    ///< The vertex referred by this entry
-        aiVector3D mPosition;   ///< Position
+        aiVector3D mPosition;   ///< position
         uint32_t mSmoothGroups;
         float mDistance;        ///< Distance of this vertex to the sorting plane
 

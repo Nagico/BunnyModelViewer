@@ -134,7 +134,7 @@ namespace glm
 			// special case when vectors in opposite directions :
 			// there is no "ideal" rotation axis
 			// So guess one; any will do as long as it's perpendicular to start
-			// This implementation favors a rotation around the Up axis (Y),
+			// This implementation favors a rotation around the up axis (Y),
 			// since it's often what you want to do.
 			rotationAxis = cross(vec<3, T, Q>(0, 0, 1), orig);
 			if(length2(rotationAxis) < epsilon<T>()) // bad luck, they were parallel, try again!

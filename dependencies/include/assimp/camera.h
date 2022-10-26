@@ -109,14 +109,14 @@ struct aiCamera {
      */
     C_STRUCT aiString mName;
 
-    /** Position of the camera relative to the coordinate space
+    /** position of the camera relative to the coordinate space
      *  defined by the corresponding node.
      *
      *  The default value is 0|0|0.
      */
     C_STRUCT aiVector3D mPosition;
 
-    /** 'Up' - vector of the camera coordinate system relative to
+    /** 'up' - vector of the camera coordinate system relative to
      *  the coordinate space defined by the corresponding node.
      *
      *  The 'right' vector of the camera coordinate system is

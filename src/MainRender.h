@@ -22,6 +22,7 @@ public:
         bool line = false;
         bool point = false;
         bool select = false;
+        bool camera = false;
     };
 
     MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboard *keyboard);
@@ -39,6 +40,11 @@ public:
 
     Mode mode;
 private:
+    struct ModelTransform {
+        glm::vec3 position;
+        glm::vec3 scale;
+        glm::vec3 rotation;
+    };
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
 
@@ -55,6 +61,8 @@ private:
 
     ShaderProgram m_modelShader, m_modelColorShader;
     ShaderProgram m_lampShader;
+
+    ModelTransform m_modelTransform;
 
     glm::mat4 m_modelMatrix;
     glm::mat4 m_viewMatrix;
@@ -78,24 +86,18 @@ private:
     void initializeRayPicker();
 
     void initializeEvent();
-
     void initializeRayPickerEvent(EventHandler &handler);
-
     void initializeCameraEvent(EventHandler &handler);
-
+    void initializeModelEvent(EventHandler &handler);
     void initializeModeChangeEvent(EventHandler &handler);
-
     void renderHighlight();
-
     void renderSelect();
-
     void renderFill();
-
     void renderLine();
-
     void renderPoint();
-
     void renderLamp();
+    void updateModelMatrix();
+    void resetModelMatrix();
 };
 
 #endif

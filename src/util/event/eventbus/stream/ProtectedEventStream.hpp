@@ -129,16 +129,17 @@ private:
 
 	bool rawAddListener(const std::uint32_t listenerID, Callback&& callback)
 	{
-		auto found = std::find(_listenerIDs.begin(), _listenerIDs.end(), listenerID);
-		if(found != _listenerIDs.end())
-		{
-			/// ###### IMPORTANT ######
-			/// This exception has some reason.
-			/// User should use multiple listeners instead of one. Thanks to that it makes
-			/// it more clear what will happen when call unlisten<Event> with specific Event
-			throw std::invalid_argument{std::string{"Already added listener for event: "} +
-										typeid(Event).name()};
-		}
+        // TODO: 解除注释，替换为多listener模式
+//		auto found = std::find(_listenerIDs.begin(), _listenerIDs.end(), listenerID);
+//		if(found != _listenerIDs.end())
+//		{
+//			/// ###### IMPORTANT ######
+//			/// This exception has some reason.
+//			/// User should use multiple listeners instead of one. Thanks to that it makes
+//			/// it more clear what will happen when call unlisten<Event> with specific Event
+//			throw std::invalid_argument{std::string{"Already added listener for event: "} +
+//										typeid(Event).name()};
+//		}
 
 		_callbacks.push_back(std::forward<Callback>(callback));
 		_listenerIDs.push_back(listenerID);

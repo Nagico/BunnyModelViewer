@@ -127,7 +127,7 @@ struct aiLight {
      */
     C_ENUM aiLightSourceType mType;
 
-    /** Position of the light source in space. Relative to the
+    /** position of the light source in space. Relative to the
      *  transformation of the node corresponding to the light.
      *
      *  The position is undefined for directional lights.
@@ -142,7 +142,7 @@ struct aiLight {
      */
     C_STRUCT aiVector3D mDirection;
 
-    /** Up direction of the light source in space. Relative to the
+    /** up direction of the light source in space. Relative to the
      *  transformation of the node corresponding to the light.
      *
      *  The direction is undefined for point lights. The vector

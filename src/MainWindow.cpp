@@ -30,6 +30,12 @@ void MainWindow::render(float deltaTime) {
     EventHandler::get().getEventBus()->process();
     m_mouse->update();
     m_keyboard->update();
+
+    if (m_render->mode.camera)
+        setCursorMode(CursorMode::Disabled);
+    else
+        setCursorMode(CursorMode::Normal);
+
     m_render->render(deltaTime);
 
     refreshTitle();
@@ -40,6 +46,7 @@ void MainWindow::refreshTitle() {
     std::stringstream title;
     if (m_render->modelLoaded) {
         if (m_render->mode.select) title << "[Select] ";
+        if (m_render->mode.camera) title << "[Camera] ";
         title << m_render->modelName << " | ";
         if (m_render->mode.fill) title << "Fill ";
         if (m_render->mode.line) title << "Line ";

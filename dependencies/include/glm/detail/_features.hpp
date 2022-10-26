@@ -60,7 +60,7 @@
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2343.pdf
 
 //
-// Right angle brackets - GCC 4.3
+// right angle brackets - GCC 4.3
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1757.html
 
 //

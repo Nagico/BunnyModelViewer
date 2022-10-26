@@ -33,6 +33,8 @@ KeyboardKey toKeyboardKey(int key)
     switch (key) {
         case GLFW_KEY_A:
             return KeyboardKey::A;
+        case GLFW_KEY_C:
+            return KeyboardKey::C;
         case GLFW_KEY_D:
             return KeyboardKey::D;
         case GLFW_KEY_E:
@@ -45,6 +47,8 @@ KeyboardKey toKeyboardKey(int key)
             return KeyboardKey::P;
         case GLFW_KEY_Q:
             return KeyboardKey::Q;
+        case GLFW_KEY_R:
+            return KeyboardKey::R;
         case GLFW_KEY_S:
             return KeyboardKey::S;
         case GLFW_KEY_W:
@@ -81,6 +85,8 @@ int toGLFWKeyboardKey(KeyboardKey key)
     switch (key) {
         case KeyboardKey::A:
             return GLFW_KEY_A;
+        case KeyboardKey::C:
+            return GLFW_KEY_C;
         case KeyboardKey::D:
             return GLFW_KEY_D;
         case KeyboardKey::E:
@@ -93,6 +99,8 @@ int toGLFWKeyboardKey(KeyboardKey key)
             return GLFW_KEY_P;
         case KeyboardKey::Q:
             return GLFW_KEY_Q;
+        case KeyboardKey::R:
+            return GLFW_KEY_R;
         case KeyboardKey::S:
             return GLFW_KEY_S;
         case KeyboardKey::W:

@@ -16,12 +16,14 @@ int toGLFWMouseButton(MouseButton button);
 
 enum class KeyboardKey {
     A,
+    C,
     D,
     E,
     F,
     L,
     P,
     Q,
+    R,
     S,
     W,
     RIGHT,

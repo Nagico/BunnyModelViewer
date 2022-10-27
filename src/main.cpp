@@ -8,7 +8,7 @@ int main()
     OpenGLWindow::setSamples(16);
     MainWindow window(1400, 800);
 
-    //window.loadModel("assets/model/bunny_texture/bunny.obj");
+    window.loadModel("assets/model/bunny_texture/bunny.obj");
     //window.loadModel("assets/model/bun_zipper.ply");
 
     window.exec();

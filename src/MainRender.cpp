@@ -463,7 +463,7 @@ void MainRender::loadModel(const string &path) {
 }
 
 void MainRender::resetModelMatrix() {
-    modelTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    modelTransform.position = glm::vec3(0.04f, 0.0f, 0.0f);
     modelTransform.scale = 1.f;
     modelTransform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     updateModelMatrix();

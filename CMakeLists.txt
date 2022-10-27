@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.23)
-project(test)
+project(model-viewer)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -48,7 +48,7 @@ add_custom_command( OUTPUT COPY_ASSETS
 add_custom_target(assets ALL DEPENDS COPY_ASSETS)
 
 add_executable(
-        test
+        model-viewer
         src/main.cpp
         dependencies/src/glad.c
         dependencies/src/imgui.cpp
@@ -56,7 +56,6 @@ add_executable(
         dependencies/src/imgui_draw.cpp
         dependencies/src/imgui_impl_glfw.cpp
         dependencies/src/imgui_impl_opengl3.cpp
-        dependencies/src/imgui_impl_win32.cpp
         dependencies/src/imgui_tables.cpp
         dependencies/src/imgui_widgets.cpp
 
@@ -101,16 +100,16 @@ add_executable(
         src/util/nfd/simple_exec.h
 )
 
-target_compile_options(test
+target_compile_options(model-viewer
         PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
         $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64")
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")
-        target_link_libraries(test glfw3 opengl32 assimp-vc143-mt OpenCL Dexode::EventBus)
+        target_link_libraries(model-viewer glfw3 opengl32 assimp-vc143-mt Dexode::EventBus)
     elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-        target_link_libraries(test glfw3 opengl32 libassimp Dexode::EventBus)
+        target_link_libraries(model-viewer glfw3 opengl32 libassimp Dexode::EventBus)
     else()
         message(FATAL_ERROR "Unsupported compiler")
     endif()
@@ -118,4 +117,4 @@ else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
 
-add_dependencies(test assets assimp)
+add_dependencies(model-viewer assets assimp)

@@ -129,6 +129,9 @@ void MainWindow::initializeImGui() {
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);
     ImGui_ImplOpenGL3_Init("#version 430 core");
+
+    // font size
+    io.Fonts->AddFontFromFileTTF("assets/font/calibri.ttf", 18.0f);
 }
 
 void MainWindow::renderImGui() {

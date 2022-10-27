@@ -151,7 +151,7 @@ void OpenGLWindow::setWindowTitle(const string &title)
 {
     m_title = title;
     std::ostringstream sout;
-    sout << m_title << "---FPS : " << m_fps;
+    sout << m_title << " | FPS: " << m_fps;
     glfwSetWindowTitle(m_window, sout.str().c_str());
 }
 

@@ -332,10 +332,17 @@ void MainRender::initializeCameraEvent(EventHandler& handler) {
         m_camera->ProcessKeyboard(Camera::DOWN, m_deltaTime);
     });
 
-    // 相机模式 拖拽相机
+    // 相机模式 左键 拖拽相机
     handler.addListener([this](const event::Mouse::MoveEvent& event) {
         if (mode.camera) {
             m_camera->ProcessMouseMovement(event.offset.x, event.offset.y);
+        }
+    });
+
+    // 相机模式 滚轮 调整FOV
+    handler.addListener([this](const event::Mouse::ScrollEvent& event) {
+        if (mode.camera) {
+            m_camera->ProcessMouseScroll(event.offset.y);
         }
     });
 }
@@ -348,7 +355,7 @@ void MainRender::initializeModelEvent(EventHandler& handler) {
 
     // 鼠标滚轮 缩放模型
     handler.addListener([this](const event::Mouse::ScrollEvent &event) {
-        if (modelLoaded) {
+        if (modelLoaded && !mode.camera) {
             auto scale = m_modelTransform.scale.x + event.offset.y * 0.3f;
             if (scale < 0.1f) {
                 scale = 0.1f;

@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include "util/opengl/OpenGLWindow.h"
+#include "imgui.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
@@ -27,6 +28,9 @@ protected:
     void mouseButtonEvent(int button, int action, int mods) override;
 
 private:
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     Camera *m_camera;
     Mouse *m_mouse;
     Keyboard *m_keyboard;
@@ -36,6 +40,12 @@ private:
     void initializeEvent();
 
     void refreshTitle();
+
+    void initializeImGui();
+
+    void renderImGui();
+
+    string openFile() const&;
 };
 
 #endif

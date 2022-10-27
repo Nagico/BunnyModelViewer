@@ -121,7 +121,6 @@ public:
         }
 
         // update front, right and up Vectors using the updated Euler angles
-        updateCameraVectors();
     }
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -141,12 +140,8 @@ public:
         pitch = defaultPitch;
         front = glm::vec3(0.0f, 0.0f, -1.0f);
         zoom = ZOOM;
-
-        updateCameraVectors();
     }
 
-private:
-    // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
     {
         // calculate the new front vector

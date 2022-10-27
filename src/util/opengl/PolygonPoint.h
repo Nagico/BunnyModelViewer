@@ -20,6 +20,8 @@ public:
     bool modifyIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
     void resetIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
+
+    [[nodiscard]] std::string getIndicesString() const& override;
 private:
     struct PointInfo {
         unsigned int index;

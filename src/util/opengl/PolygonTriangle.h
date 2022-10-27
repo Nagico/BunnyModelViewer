@@ -17,6 +17,8 @@ public:
     void addIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
     void removeIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
     void resetIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
+
+    [[nodiscard]] std::string getIndicesString() const& override;
 private:
     void draw(const PolygonMesh &mesh) override;
     bool in(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;

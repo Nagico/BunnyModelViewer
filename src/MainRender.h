@@ -17,6 +17,7 @@ class MainRender : public OpenGLRender
 {
 public:
     struct Mode {
+        bool gui = false;
         bool lamp = true;
         bool fill = true;
         bool line = false;
@@ -24,14 +25,24 @@ public:
         bool select = false;
         bool camera = false;
     };
+    struct ModelTransform {
+        glm::vec3 position;
+        float scale;
+        glm::vec3 rotation;
+    };
 
     MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboard *keyboard);
     ~MainRender();
 
     void render(float deltaTime) override;
     void resizeGL(int w, int h) override;
+    void resetModelMatrix();
     void loadModel(const string &path);
     void unloadModel();
+
+    std::string getHighlightPointString() const&;
+    std::string getHighlightTriangleString() const&;
+
 
     bool modelLoaded;
     string modelName;
@@ -39,12 +50,9 @@ public:
     RayPicker *rayPicker;
 
     Mode mode;
+
+    ModelTransform modelTransform;
 private:
-    struct ModelTransform {
-        glm::vec3 position;
-        glm::vec3 scale;
-        glm::vec3 rotation;
-    };
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
 
@@ -61,8 +69,6 @@ private:
 
     ShaderProgram m_modelShader, m_modelColorShader;
     ShaderProgram m_lampShader;
-
-    ModelTransform m_modelTransform;
 
     glm::mat4 m_modelMatrix;
     glm::mat4 m_viewMatrix;
@@ -97,7 +103,6 @@ private:
     void renderPoint();
     void renderLamp();
     void updateModelMatrix();
-    void resetModelMatrix();
 };
 
 #endif

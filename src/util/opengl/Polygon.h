@@ -27,7 +27,7 @@ public:
     bool modifyIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
     virtual void resetIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
-
+    virtual std::string getIndicesString() const& = 0;
 
 protected:
     vector<PolygonMesh> m_meshes;

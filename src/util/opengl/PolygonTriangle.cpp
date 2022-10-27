@@ -3,6 +3,7 @@
 //
 
 #include "PolygonTriangle.h"
+#include <sstream>
 
 PolygonTriangle::PolygonTriangle(const vector<Mesh>& meshes) : Polygon(meshes) {
 
@@ -46,4 +47,14 @@ void PolygonTriangle::resetIndices(int meshIndex, unsigned int index0, unsigned 
         mesh.indices.clear();
     }
     addIndices(meshIndex, index0, index1, index2);
+}
+
+std::string PolygonTriangle::getIndicesString() const &{
+    std::stringstream ss;
+    for (const auto & mesh : m_meshes) {
+        for (int j = 0; j < mesh.indices.size(); j += 3) {
+            ss << "Triangle (" << mesh.indices[j] << ", " << mesh.indices[j + 1] << ", " << mesh.indices[j + 2] << ") " << std::endl;
+        }
+    }
+    return ss.str();
 }

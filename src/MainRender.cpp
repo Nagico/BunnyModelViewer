@@ -8,6 +8,8 @@
 #include "util/event/Event.h"
 #include "util/event/Mouse.h"
 #include "util/event/Keyboard.h"
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
 
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
@@ -73,11 +75,14 @@ void MainRender::render(float deltaTime)
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    m_camera->updateCameraVectors();
+
     m_projectionMatrix = glm::perspective(
             glm::radians(m_camera->zoom),
             (float)m_width / (float)m_height,
             NEAR_PLANE, FAR_PLANE);
     m_viewMatrix = m_camera->GetViewMatrix();
+    updateModelMatrix();
 
     if (modelLoaded) {
         renderHighlight();
@@ -230,7 +235,7 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
 
     // Ctrl+左键 输出当前选中几何元素信息
     handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::LEFT>& event) {
-        if (m_keyboard->state[KeyboardKey::LEFT_CONTROL]) {
+        if (mode.select && !mode.gui) {
             if (rayPicker->selectPointValid) {
                 // TODO: 事件驱动，自定义内容
                 std::cout << "select point (" << rayPicker->selectPointIndex << "): "
@@ -255,7 +260,7 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
 
     // Ctrl+右键 高亮/取消高亮当前元素
     handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::RIGHT>& event) {
-        if (m_keyboard->state[KeyboardKey::LEFT_CONTROL]) {
+        if (mode.select && !mode.gui) {
             if (rayPicker->selectPointValid) {
                 // TODO: 事件驱动，自定义内容
                 auto status = m_highlightPoint->modifyIndices(rayPicker->selectMeshIndex, rayPicker->selectPointIndex);
@@ -285,12 +290,12 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
     });
 
     // Ctrl 预览当前选中元素
-    handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_CONTROL> &event){
-        if (modelLoaded) {
+    handler.addListener([this](const event::Mouse::MoveEvent &event){
+        if (modelLoaded && mode.select && !mode.gui) {
             rayPicker->rayPick(
                     m_model->meshes, m_camera->position,
                     m_modelMatrix, m_viewMatrix, m_projectionMatrix,
-                    (float)m_mouse->position.x, (float)m_mouse->position.y, m_width, m_height);
+                    (float)event.position.x, (float)event.position.y, m_width, m_height);
 
         }
     });
@@ -357,34 +362,31 @@ void MainRender::initializeModelEvent(EventHandler& handler) {
 
     // 鼠标滚轮 缩放模型
     handler.addListener([this](const event::Mouse::ScrollEvent &event) {
-        if (modelLoaded && !mode.camera) {
-            auto scale = m_modelTransform.scale.x + event.offset.y * 0.03f;
+        if (modelLoaded && !mode.camera && !mode.gui) {
+            auto scale = modelTransform.scale + event.offset.y * 0.03f;
             if (scale < 0.1f) {
                 scale = 0.1f;
             }
-            m_modelTransform.scale = glm::vec3(scale);
-            updateModelMatrix();
+            modelTransform.scale = scale;
         }
     });
 
     // 鼠标左键 旋转模型
     handler.addListener([this](const event::Mouse::MoveEvent &event) {
-        if (!mode.camera && m_mouse->state[MouseButton::LEFT]) {
+        if (!mode.camera && m_mouse->state[MouseButton::LEFT] && !mode.gui) {
             if (modelLoaded) {
-                m_modelTransform.rotation.x -= event.offset.y * 0.005f / m_modelTransform.scale.x;
-                m_modelTransform.rotation.y += event.offset.x * 0.005f / m_modelTransform.scale.x;
-                updateModelMatrix();
+                modelTransform.rotation.x -= event.offset.y * 0.005f / modelTransform.scale;
+                modelTransform.rotation.y += event.offset.x * 0.005f / modelTransform.scale;
             }
         }
     });
 
     // 鼠标右键 平移模型
     handler.addListener([this](const event::Mouse::MoveEvent &event) {
-        if (!mode.camera && m_mouse->state[MouseButton::RIGHT]) {
+        if (!mode.camera && m_mouse->state[MouseButton::RIGHT] && !mode.gui) {
             if (modelLoaded) {
-                m_modelTransform.position.x += event.offset.x * 0.0004f / m_modelTransform.scale.x;
-                m_modelTransform.position.y += event.offset.y * 0.0004f / m_modelTransform.scale.x;
-                updateModelMatrix();
+                modelTransform.position.x += event.offset.x * 0.0004f / modelTransform.scale;
+                modelTransform.position.y += event.offset.y * 0.0004f / modelTransform.scale;
             }
         }
     });
@@ -461,19 +463,19 @@ void MainRender::loadModel(const string &path) {
 }
 
 void MainRender::resetModelMatrix() {
-    m_modelTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
-    m_modelTransform.scale = glm::vec3(1.f);
-    m_modelTransform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    modelTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    modelTransform.scale = 1.f;
+    modelTransform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     updateModelMatrix();
 }
 
 void MainRender::updateModelMatrix() {
     m_modelMatrix = m_model->basisTransform;
-    m_modelMatrix = glm::translate(m_modelMatrix, m_modelTransform.position);
-    m_modelMatrix = glm::scale(m_modelMatrix, m_modelTransform.scale);
-    m_modelMatrix = glm::rotate(m_modelMatrix, m_modelTransform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    m_modelMatrix = glm::rotate(m_modelMatrix, m_modelTransform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    m_modelMatrix = glm::rotate(m_modelMatrix, m_modelTransform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    m_modelMatrix = glm::translate(m_modelMatrix, modelTransform.position);
+    m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(modelTransform.scale));
+    m_modelMatrix = glm::rotate(m_modelMatrix, modelTransform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    m_modelMatrix = glm::rotate(m_modelMatrix, modelTransform.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    m_modelMatrix = glm::rotate(m_modelMatrix, modelTransform.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void MainRender::unloadModel() {
@@ -486,4 +488,12 @@ void MainRender::unloadModel() {
 
         modelLoaded = false;
     }
+}
+
+std::string MainRender::getHighlightPointString() const& {
+    return m_highlightPoint->getIndicesString();
+}
+
+std::string MainRender::getHighlightTriangleString() const &{
+    return m_highlightTriangle->getIndicesString();
 }

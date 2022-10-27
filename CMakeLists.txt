@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 find_package(OpenGL REQUIRED)
 
 include_directories(dependencies/include)
+include_directories(dependencies/include/imgui)
 add_subdirectory(src/util/event/eventbus)
 
 message("OpenGL: ${OPENGL_LIBRARIES}")
@@ -50,6 +51,14 @@ add_executable(
         test
         src/main.cpp
         dependencies/src/glad.c
+        dependencies/src/imgui.cpp
+        dependencies/src/imgui_demo.cpp
+        dependencies/src/imgui_draw.cpp
+        dependencies/src/imgui_impl_glfw.cpp
+        dependencies/src/imgui_impl_opengl3.cpp
+        dependencies/src/imgui_impl_win32.cpp
+        dependencies/src/imgui_tables.cpp
+        dependencies/src/imgui_widgets.cpp
 
         src/util/opengl/Camera.h
         src/util/opengl/Image.cpp
@@ -60,14 +69,15 @@ add_executable(
         src/util/opengl/ShaderProgram.h
         src/util/opengl/Model.cpp
         src/util/opengl/Model.h
-        
         src/util/opengl/OpenGLRender.h
         src/util/opengl/OpenGLWindow.cpp
         src/util/opengl/OpenGLWindow.h
+
         src/MainRender.cpp
         src/MainRender.h
         src/MainWindow.cpp
         src/MainWindow.h
+
         src/util/opengl/Camera.cpp
         src/util/RayPicker.cpp
         src/util/RayPicker.h
@@ -83,7 +93,13 @@ add_executable(
         src/util/opengl/PolygonTriangle.h
         src/util/event/enum.cpp
         src/util/event/Keyboard.cpp
-        src/util/event/Keyboard.h)
+        src/util/event/Keyboard.h
+        src/util/nfd/nfd.h
+        src/util/nfd/nfd_common.c
+        src/util/nfd/nfd_common.h
+        src/util/nfd/nfd_win.cpp
+        src/util/nfd/simple_exec.h
+)
 
 target_compile_options(test
         PRIVATE

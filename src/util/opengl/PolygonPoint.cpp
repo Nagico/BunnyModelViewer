@@ -3,6 +3,7 @@
 //
 
 #include "PolygonPoint.h"
+#include <sstream>
 
 PolygonPoint::PolygonPoint(const vector<Mesh>& meshes) : Polygon(meshes) {
 }
@@ -80,5 +81,18 @@ bool PolygonPoint::modifyIndices(int meshIndex, unsigned int index0, unsigned in
         addIndices(meshIndex, index0, index1, index2);
         return true;
     }
+}
+
+std::string PolygonPoint::getIndicesString() const& {
+    std::stringstream ss;
+    for (auto &mesh: m_meshes) {
+        for (auto &index: mesh.indices) {
+            ss << "Point " << index << ": " <<
+            mesh.vertices[index].position.x << ", " <<
+            mesh.vertices[index].position.y << ", " <<
+            mesh.vertices[index].position.z << std::endl;
+        }
+    }
+    return ss.str();
 }
 

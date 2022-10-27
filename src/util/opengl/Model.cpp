@@ -24,7 +24,7 @@ Model::~Model()
 /// \param program 着色器对象
 void Model::render(ShaderProgram *program, bool useMeshInfo)
 {
-    for (auto it : m_meshes)
+    for (auto it : meshes)
         it.render(program, useMeshInfo);
 }
 
@@ -59,6 +59,32 @@ void Model::loadModel(const string &path)
     }
     m_directory = path.substr(0, path.find_last_of("//"));  // 获取模型所在目录
     processNode(scene->mRootNode, scene);  // 递归处理节点
+
+    glm::vec3 maxVertex = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+    glm::vec3 minVertex = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+
+    for (auto it : meshes)
+    {
+        maxVertex.x = std::max(maxVertex.x, it.getMeshInfo().maxVertex.x);
+        maxVertex.y = std::max(maxVertex.y, it.getMeshInfo().maxVertex.y);
+        maxVertex.z = std::max(maxVertex.z, it.getMeshInfo().maxVertex.z);
+
+        minVertex.x = std::min(minVertex.x, it.getMeshInfo().minVertex.x);
+        minVertex.y = std::min(minVertex.y, it.getMeshInfo().minVertex.y);
+        minVertex.z = std::min(minVertex.z, it.getMeshInfo().minVertex.z);
+    }
+
+    // 统计xyz最远距离
+    auto move = maxVertex + minVertex;
+
+    float disX = maxVertex.x - minVertex.x;
+    float disY = maxVertex.y - minVertex.y;
+    float disZ = maxVertex.z - minVertex.z;
+    float maxDis = std::max(disX, std::max(disY, disZ));
+    auto scale = 1.8f / maxDis;
+
+    basisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-move.x * scale / 2.0f, -move.y * scale / 2.0f, 0.f));
+    basisTransform = glm::scale(basisTransform, glm::vec3(scale));
 }
 
 /// 处理节点
@@ -70,7 +96,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
     for (size_t i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];  // 获取节点的网格
-        m_meshes.push_back(processMesh(mesh, scene));  // 处理网格
+        meshes.push_back(processMesh(mesh, scene));  // 处理网格
     }
 
     // 接下来对它的子节点重复这一过程
@@ -205,17 +231,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
         meshInfo.valid = true;
     }
 
-    // 统计xyz最远距离
-    auto move = maxVertex + minVertex;
-
-    float disX = maxVertex.x - minVertex.x;
-    float disY = maxVertex.y - minVertex.y;
-    float disZ = maxVertex.z - minVertex.z;
-    float maxDis = std::max(disX, std::max(disY, disZ));
-    auto scale = 1.8f / maxDis;
-
-    meshInfo.basisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-move.x * scale / 2.0f, -move.y * scale / 2.0f, 0.f));
-    meshInfo.basisTransform = glm::scale(meshInfo.basisTransform, glm::vec3(scale));
+    meshInfo.maxVertex = maxVertex;
+    meshInfo.minVertex = minVertex;
 
     return Mesh(vertices, indices, faces, textures, meshInfo);  // 返回标准化网格对象
 }
@@ -299,7 +316,3 @@ unsigned int Model::loadTexture(const string &filename)
 Model::Model() {
 }
 
-
-vector<Mesh> Model::getMeshes() const {
-    return m_meshes;
-}

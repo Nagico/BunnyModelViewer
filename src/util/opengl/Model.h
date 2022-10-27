@@ -16,8 +16,11 @@ public:
 
     void render(ShaderProgram *program, bool useMeshInfo = true);
 
-    [[nodiscard]] vector<Mesh> getMeshes() const;
+    /// 基础变换矩阵
+    glm::mat4 basisTransform = glm::mat4(1.0f);
 
+    /// 模型数据
+    vector<Mesh> meshes;
 
 private:
     void loadModel(const string &path);
@@ -28,8 +31,6 @@ private:
 
     /// 模型目录
     string m_directory;
-    /// 模型数据
-    vector<Mesh> m_meshes;
     /// 已加载的纹理，避免重复加载
     vector<Texture> m_loadedTextures;
 

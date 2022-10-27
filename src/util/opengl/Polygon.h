@@ -11,23 +11,28 @@ using std::vector;
 
 class Polygon {
 public:
+    struct PolygonMesh {
+        unsigned int vao;
+        vector<unsigned int> indices;
+        vector<VertexData> vertices;
+    };
+
     Polygon();
-    Polygon(unsigned vao);
+    Polygon(const vector<Mesh>& meshes);
 
-    void setVao(unsigned vao);
     void render(float offset, float size = 0.f);
-    virtual void addIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
-    virtual void removeIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
-    bool modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
+    virtual void addIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
+    virtual void removeIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
+    bool modifyIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
-    virtual void resetIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
+    virtual void resetIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
 
-    vector<unsigned int> m_indices;
+
 protected:
-    unsigned int m_vao;
+    vector<PolygonMesh> m_meshes;
 
-    virtual void draw() = 0;
-    virtual bool in(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
+    virtual void draw(const PolygonMesh &mesh) = 0;
+    virtual bool in(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) = 0;
 };
 
 

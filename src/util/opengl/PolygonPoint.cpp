@@ -1,36 +1,46 @@
-//
+﻿//
 // Created by co on 2022/10/25.
 //
 
 #include "PolygonPoint.h"
 
-PolygonPoint::PolygonPoint(unsigned int vao, const vector<VertexData> &vertex) : Polygon(vao) {
-    m_vertex = vertex;
+PolygonPoint::PolygonPoint(const vector<Mesh>& meshes) : Polygon(meshes) {
 }
 
-void PolygonPoint::addIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
-    m_indices.push_back(index0);
-    m_points.insert({{m_vertex[index0].position.x, m_vertex[index0].position.y, m_vertex[index0].position.z}, index0});
+void PolygonPoint::addIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) {
+    m_meshes[meshIndex].indices.push_back(index0);
+    auto pos = std::make_tuple(m_meshes[meshIndex].vertices[index0].position.x,
+                               m_meshes[meshIndex].vertices[index0].position.y,
+                               m_meshes[meshIndex].vertices[index0].position.z);
+    m_points.insert({pos, {index0, meshIndex}});
 }
 
-void PolygonPoint::removeIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
-    auto index = getIndex(m_vertex[index0].position);
-    if (index != 0xffffffff) {
-        m_indices.erase(std::find(m_indices.begin(), m_indices.end(), index));
-        m_points.erase({m_vertex[index0].position.x, m_vertex[index0].position.y, m_vertex[index0].position.z});
+void PolygonPoint::removeIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) {
+    // 需要处理相同坐标、不同ID的点
+
+    auto info = getInfo(m_meshes[meshIndex].vertices[index0].position);  // 根据坐标在记录表中查找已绘制的点信息
+    if (info.index != 0xffffffff) {  // 如果找到了
+        // 从indices中删除查找到的点
+        m_meshes[info.meshIndex].indices.erase(
+                std::find(m_meshes[info.meshIndex].indices.begin(), m_meshes[info.meshIndex].indices.end(), info.index));
+        // 从记录表中删除点坐标对应的信息
+        m_points.erase({
+            m_meshes[meshIndex].vertices[index0].position.x,
+            m_meshes[meshIndex].vertices[index0].position.y,
+            m_meshes[meshIndex].vertices[index0].position.z});
     }
 }
 
-void PolygonPoint::draw() {
+void PolygonPoint::draw(const PolygonMesh &mesh) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-    for(auto& it : m_indices)
+    for(auto& it : mesh.indices)
         glDrawArrays(GL_POINTS, it, 1);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-bool PolygonPoint::in(unsigned int index0, unsigned int index1, unsigned int index2) {
-    auto pointPos = m_vertex[index0].position;
-    if (getIndex(pointPos) != 0xffffffff)
+bool PolygonPoint::in(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) {
+    auto pointPos = m_meshes[meshIndex].vertices[index0].position;
+    if (getInfo(pointPos).index != 0xffffffff)
         return true;
     return false;
 }
@@ -39,37 +49,36 @@ PolygonPoint::PolygonPoint() {
 
 }
 
-void PolygonPoint::resetIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
-    m_indices.clear();
-    m_indices.push_back(index0);
+void PolygonPoint::resetIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) {
+    for (auto &mesh: m_meshes) {
+        mesh.indices.clear();
+    }
     m_points.clear();
-    m_points.insert({{m_vertex[index0].position.x, m_vertex[index0].position.y, m_vertex[index0].position.z}, index0});
+
+    addIndices(meshIndex, index0, index1, index2);
 }
 
-unsigned int PolygonPoint::getIndex(const glm::vec3& pos) const {
+PolygonPoint::PointInfo PolygonPoint::getInfo(const glm::vec3& pos) const {
     auto key = std::make_tuple(pos.x, pos.y, pos.z);
     auto index = m_points.find(key);
     if (index != m_points.end())
         return index->second;
-    return 0xffffffff;  // max unsigned int
+    return {0xffffffff, -1};  // max unsigned int
 }
 
-bool PolygonPoint::modifyIndices(unsigned int index0, unsigned int index1, unsigned int index2) {
-    auto pointPos = m_vertex[index0].position;
-    auto index = getIndex(pointPos);
-    if (index != 0xffffffff)  // if the point is in the vector of points
+bool PolygonPoint::modifyIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) {
+    auto pointPos = m_meshes[meshIndex].vertices[index0].position;
+    auto info = getInfo(pointPos);
+    if (info.index != 0xffffffff)  // if the point is in the vector of points
     {
-        m_indices.erase(std::find(m_indices.begin(), m_indices.end(), index));
-        m_points.erase({m_vertex[index0].position.x, m_vertex[index0].position.y, m_vertex[index0].position.z});
+        m_meshes[meshIndex].indices.erase(std::find(m_meshes[meshIndex].indices.begin(), m_meshes[meshIndex].indices.end(), info.index));
+        m_points.erase({m_meshes[meshIndex].vertices[index0].position.x, m_meshes[meshIndex].vertices[index0].position.y, m_meshes[meshIndex].vertices[index0].position.z});
         return false;
     }
     else
     {
-        addIndices(index0, index1, index2);
+        addIndices(meshIndex, index0, index1, index2);
         return true;
     }
 }
 
-void PolygonPoint::setVertex(const vector<VertexData> &vertex) {
-    m_vertex = vertex;
-}

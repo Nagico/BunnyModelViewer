@@ -13,13 +13,13 @@ class PolygonTriangle : public Polygon {
 public:
     PolygonTriangle();
 
-    PolygonTriangle(unsigned int vao);
-    void addIndices(unsigned int index0, unsigned int index1, unsigned int index2) override;
-    void removeIndices(unsigned int index0, unsigned int index1, unsigned int index2) override;
-    void resetIndices(unsigned int index0, unsigned int index1, unsigned int index2) override;
+    explicit PolygonTriangle(const vector<Mesh>& meshes);
+    void addIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
+    void removeIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
+    void resetIndices(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
 private:
-    void draw() override;
-    bool in(unsigned int index0, unsigned int index1, unsigned int index2) override;
+    void draw(const PolygonMesh &mesh) override;
+    bool in(int meshIndex, unsigned int index0, unsigned int index1, unsigned int index2) override;
 };
 
 

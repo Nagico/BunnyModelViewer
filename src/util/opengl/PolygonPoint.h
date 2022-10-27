@@ -12,25 +12,28 @@
 class PolygonPoint : public Polygon {
 public:
     PolygonPoint();
-    PolygonPoint(unsigned int vao, const vector<VertexData> &vertex);
+    PolygonPoint(const vector<Mesh>& meshes);
 
-    void setVertex(const vector<VertexData> &vertex);
+    void addIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
+    void removeIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
-    void addIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
-    void removeIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
+    bool modifyIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
 
-    bool modifyIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0);
-
-    void resetIndices(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
+    void resetIndices(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
 private:
-    vector<VertexData> m_vertex;
+    struct PointInfo {
+        unsigned int index;
+        int meshIndex;
+    };
 
-    void draw() override;
-    bool in(unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
+    void draw(const PolygonMesh &mesh) override;
+    bool in(int meshIndex, unsigned int index0, unsigned int index1 = 0, unsigned int index2 = 0) override;
 
-    [[nodiscard]] unsigned int getIndex(const glm::vec3& pos) const;
+    [[nodiscard]] PointInfo getInfo(const glm::vec3& pos) const;
 
-    std::map<std::tuple<float, float, float>, unsigned int> m_points;
+    /// key: point position <x, y, z>
+    /// value: point info
+    std::map<std::tuple<float, float, float>, PointInfo> m_points;
 };
 
 

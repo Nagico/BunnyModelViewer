@@ -103,7 +103,7 @@ void MainRender::renderHighlight() {
 void MainRender::renderSelect() {
     if (rayPicker->selectPointValid)
     {
-        m_selectPoint->resetIndices(rayPicker->selectPointIndex);
+        m_selectPoint->resetIndices(rayPicker->selectMeshIndex, rayPicker->selectPointIndex);
         m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
         m_modelColorShader.setValue("pureColor", *m_selectPointColor);
         m_selectPoint->render(-1.1f, 5.0f);
@@ -112,6 +112,7 @@ void MainRender::renderSelect() {
     else if (rayPicker->selectFaceValid)
     {
         m_selectTriangle->resetIndices(
+                rayPicker->selectMeshIndex,
                 rayPicker->selectFaceIndex[0],
                 rayPicker->selectFaceIndex[1],
                 rayPicker->selectFaceIndex[2]);
@@ -257,7 +258,7 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
         if (m_keyboard->state[KeyboardKey::LEFT_CONTROL]) {
             if (rayPicker->selectPointValid) {
                 // TODO: 事件驱动，自定义内容
-                auto status = m_highlightPoint->modifyIndices(rayPicker->selectPointIndex);
+                auto status = m_highlightPoint->modifyIndices(rayPicker->selectMeshIndex, rayPicker->selectPointIndex);
                 std::cout << (status ? "" : "un") << "highlight point (" << rayPicker->selectPointIndex << "): "
                     << rayPicker->selectPoint.position.x << ", " << rayPicker->selectPoint.position.y << ", "
                     << rayPicker->selectPoint.position.z << std::endl;
@@ -265,6 +266,7 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
             else if (rayPicker->selectFaceValid) {
                 // TODO: 事件驱动，自定义内容
                 auto status = m_highlightTriangle->modifyIndices(
+                        rayPicker->selectMeshIndex,
                         rayPicker->selectFaceIndex[0],
                         rayPicker->selectFaceIndex[1],
                         rayPicker->selectFaceIndex[2]);
@@ -286,7 +288,7 @@ void MainRender::initializeRayPickerEvent(EventHandler& handler) {
     handler.addListener([this](const event::Keyboard::KeyPressEvent<KeyboardKey::LEFT_CONTROL> &event){
         if (modelLoaded) {
             rayPicker->rayPick(
-                    m_model->getMeshes()[0], m_camera->position,
+                    m_model->meshes, m_camera->position,
                     m_modelMatrix, m_viewMatrix, m_projectionMatrix,
                     (float)m_mouse->position.x, (float)m_mouse->position.y, m_width, m_height);
 
@@ -438,20 +440,18 @@ void MainRender::loadModel(const string &path) {
         return;
     }
 
-    if (m_model->getMeshes().empty()) {
+    if (m_model->meshes.empty()) {
         std::cerr << "Model is empty" << std::endl;
         return;
     }
     modelName = path.substr(path.find_last_of('/') + 1);
 
     // 加载几何模型
-    auto vao = m_model->getMeshes()[0].getVao();
-    auto vertices = m_model->getMeshes()[0].getVertices();
 
-    m_selectPoint = new PolygonPoint(vao, vertices);
-    m_selectTriangle = new PolygonTriangle(vao);
-    m_highlightPoint = new PolygonPoint(vao, vertices);
-    m_highlightTriangle = new PolygonTriangle(vao);
+    m_selectPoint = new PolygonPoint(m_model->meshes);
+    m_selectTriangle = new PolygonTriangle(m_model->meshes);
+    m_highlightPoint = new PolygonPoint(m_model->meshes);
+    m_highlightTriangle = new PolygonTriangle(m_model->meshes);
 
     // 重置模型矩阵
     resetModelMatrix();
@@ -468,7 +468,7 @@ void MainRender::resetModelMatrix() {
 }
 
 void MainRender::updateModelMatrix() {
-    m_modelMatrix = m_model->getMeshes()[0].getMeshInfo().basisTransform;
+    m_modelMatrix = m_model->basisTransform;
     m_modelMatrix = glm::translate(m_modelMatrix, m_modelTransform.position);
     m_modelMatrix = glm::scale(m_modelMatrix, m_modelTransform.scale);
     m_modelMatrix = glm::rotate(m_modelMatrix, m_modelTransform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));

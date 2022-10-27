@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 #include "opengl/Mesh.h"
 
 class RayPicker {
@@ -15,6 +16,7 @@ public:
     glm::vec3 orig, dir;
     glm::vec3 crossPoint;
 
+    int selectMeshIndex;
     bool selectFaceValid = false;
     VertexData selectFace[3];
     unsigned int selectFaceIndex[3];
@@ -32,7 +34,7 @@ public:
     /// \param ypos 鼠标y坐标
     /// \param width 窗口宽度
     /// \param height 窗口高度
-    void rayPick(const Mesh &mesh, glm::vec3 cameraPos, const glm::mat4 &model, const glm::mat4 &view,
+    void rayPick(const vector<Mesh>& meshes, glm::vec3 cameraPos, const glm::mat4 &model, const glm::mat4 &view,
                  const glm::mat4 &projection, float xpos, float ypos, int width, int height);
 
 private:
@@ -42,7 +44,7 @@ private:
 
     glm::mat4 m_model, m_view, m_projection;
 
-    Mesh m_mesh;
+    std::vector<Mesh> m_meshes;
 
     /// 射线三角形检测 直接计算
     bool intersectTriangleBF(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2,

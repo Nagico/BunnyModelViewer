@@ -45,7 +45,9 @@ struct MeshInfo
     glm::vec3 specular = glm::vec3(1);  // 材质的镜面反射系数
     glm::vec3 emission = glm::vec3(1);  // 材质的自发光系数
 
-    glm::mat4 basisTransform = glm::mat4(1.0f);  // 基础变换矩阵
+    glm::vec3 maxVertex = glm::vec3(1.f);  // 最大位置分量
+    glm::vec3 minVertex = glm::vec3(1.f);  // 最小位置分量
+
 };
 
 class ShaderProgram;

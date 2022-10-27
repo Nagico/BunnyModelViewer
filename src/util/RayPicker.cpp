@@ -5,10 +5,10 @@
 #include <iostream>
 #include "RayPicker.h"
 
-void RayPicker::rayPick(const Mesh& mesh, const glm::vec3 cameraPos,
+void RayPicker::rayPick(const vector<Mesh>& meshes, const glm::vec3 cameraPos,
                         const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection,
                         float xpos, float ypos, int width, int height) {
-    this->m_mesh = mesh;
+    this->m_meshes = meshes;
     this->m_model = model;
     this->m_view = view;
     this->m_projection = projection;
@@ -160,17 +160,22 @@ void RayPicker::checkFaces()
 {
     float minT = 1000.f;
     Face findFace;
+    int meshIndex;
 
     float u, v, t;
 
 
 #pragma omp parallel
 #pragma omp for
-        for (auto& face : m_mesh.getFaces())
+    for (int j = 0; j < m_meshes.size(); ++j)
+    {
+#pragma omp parallel
+#pragma omp for
+        for (auto& face : m_meshes[j].getFaces())
         {
             VertexData vertex[3];
             for (int i = 0; i < 3; i++)
-                vertex[i] = m_mesh.getVertices()[face.vertex[i]];
+                vertex[i] = m_meshes[j].getVertices()[face.vertex[i]];
 
             if (intersectTriangle(vertex[0].position, vertex[1].position, vertex[2].position, t, u, v))
             {
@@ -178,16 +183,19 @@ void RayPicker::checkFaces()
                 {
                     minT = t;
                     findFace = face;
+                    meshIndex = j;
                 }
             }
         }
+    }
 
     if (minT < 1000.f)
     {
         selectFaceValid = true;
+        selectMeshIndex = meshIndex;
         for (int i = 0; i < 3; i++)
         {
-            selectFace[i] = m_mesh.getVertices()[findFace.vertex[i]];
+            selectFace[i] = m_meshes[selectMeshIndex].getVertices()[findFace.vertex[i]];
             selectFaceIndex[i] = findFace.vertex[i];
         }
         crossPoint = orig + dir * minT;

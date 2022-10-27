@@ -78,8 +78,10 @@ private:
 protected:
 #ifdef _WIN32
     unsigned long long m_lastTime = 0;
+    unsigned long long m_lastFPSTime = 0;
 #else
     double m_lastTime = 0.0;
+    double m_lastFPSTime = 0.0;
 #endif
     unsigned int m_fps = 0;
     string m_title = "OpenGL Window";

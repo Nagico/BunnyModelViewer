@@ -185,10 +185,11 @@ void OpenGLWindow::exec()
         auto deltaTime = now - m_lastTime;
         m_lastTime = now;
 
-        if (deltaTime >= 1000)
+        if (now - m_lastFPSTime >= 1000)
         {
             m_fps = frame;
             frame = 0;
+            m_lastFPSTime = now;
         }
         setWindowTitle(m_title);
 

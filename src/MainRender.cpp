@@ -356,7 +356,7 @@ void MainRender::initializeModelEvent(EventHandler& handler) {
     // 鼠标滚轮 缩放模型
     handler.addListener([this](const event::Mouse::ScrollEvent &event) {
         if (modelLoaded && !mode.camera) {
-            auto scale = m_modelTransform.scale.x + event.offset.y * 0.3f;
+            auto scale = m_modelTransform.scale.x + event.offset.y * 0.03f;
             if (scale < 0.1f) {
                 scale = 0.1f;
             }
@@ -365,12 +365,12 @@ void MainRender::initializeModelEvent(EventHandler& handler) {
         }
     });
 
-    // 鼠标左键 缩放模型
+    // 鼠标左键 旋转模型
     handler.addListener([this](const event::Mouse::MoveEvent &event) {
         if (!mode.camera && m_mouse->state[MouseButton::LEFT]) {
             if (modelLoaded) {
-                m_modelTransform.rotation.x -= event.offset.y * 0.05f / m_modelTransform.scale.x;
-                m_modelTransform.rotation.y += event.offset.x * 0.05f / m_modelTransform.scale.x;
+                m_modelTransform.rotation.x -= event.offset.y * 0.005f / m_modelTransform.scale.x;
+                m_modelTransform.rotation.y += event.offset.x * 0.005f / m_modelTransform.scale.x;
                 updateModelMatrix();
             }
         }
@@ -380,8 +380,8 @@ void MainRender::initializeModelEvent(EventHandler& handler) {
     handler.addListener([this](const event::Mouse::MoveEvent &event) {
         if (!mode.camera && m_mouse->state[MouseButton::RIGHT]) {
             if (modelLoaded) {
-                m_modelTransform.position.x += event.offset.x * 0.04f / m_modelTransform.scale.x;
-                m_modelTransform.position.y += event.offset.y * 0.04f / m_modelTransform.scale.x;
+                m_modelTransform.position.x += event.offset.x * 0.0004f / m_modelTransform.scale.x;
+                m_modelTransform.position.y += event.offset.y * 0.0004f / m_modelTransform.scale.x;
                 updateModelMatrix();
             }
         }
@@ -429,6 +429,7 @@ void MainRender::loadModel(const string &path) {
         modelLoaded = false;
     }
 
+    // 加载模型
     try {
         m_model = new Model(path);
     }
@@ -452,9 +453,6 @@ void MainRender::loadModel(const string &path) {
     m_highlightPoint = new PolygonPoint(vao, vertices);
     m_highlightTriangle = new PolygonTriangle(vao);
 
-    // 模型自动缩放
-    auto baseModelScale = std::min((float)m_width, (float)m_height) * 0.002f / pow(m_model->getMeshes()[0].getMeshInfo().maxDis,1.15);
-
     // 重置模型矩阵
     resetModelMatrix();
     m_camera->reset();
@@ -463,14 +461,14 @@ void MainRender::loadModel(const string &path) {
 }
 
 void MainRender::resetModelMatrix() {
-    m_modelTransform.position = glm::vec3(0.1f, -0.6f, 0.0f);
-    m_modelTransform.scale = glm::vec3(10.f);
+    m_modelTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_modelTransform.scale = glm::vec3(1.f);
     m_modelTransform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
     updateModelMatrix();
 }
 
 void MainRender::updateModelMatrix() {
-    m_modelMatrix = glm::mat4(1.0f);
+    m_modelMatrix = m_model->getMeshes()[0].getMeshInfo().basisTransform;
     m_modelMatrix = glm::translate(m_modelMatrix, m_modelTransform.position);
     m_modelMatrix = glm::scale(m_modelMatrix, m_modelTransform.scale);
     m_modelMatrix = glm::rotate(m_modelMatrix, m_modelTransform.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));

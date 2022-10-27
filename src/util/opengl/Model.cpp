@@ -3,6 +3,9 @@
 #include <iostream>
 #include <cfloat>
 #include "glad/glad.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
 
 
 /// 从文件中加载模型
@@ -203,11 +206,16 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     }
 
     // 统计xyz最远距离
+    auto move = maxVertex + minVertex;
+
     float disX = maxVertex.x - minVertex.x;
     float disY = maxVertex.y - minVertex.y;
     float disZ = maxVertex.z - minVertex.z;
+    float maxDis = std::max(disX, std::max(disY, disZ));
+    auto scale = 1.8f / maxDis;
 
-    meshInfo.maxDis = fmax(disX, fmax(disY, disZ));
+    meshInfo.basisTransform = glm::translate(glm::mat4(1.0f), glm::vec3(-move.x * scale / 2.0f, -move.y * scale / 2.0f, 0.f));
+    meshInfo.basisTransform = glm::scale(meshInfo.basisTransform, glm::vec3(scale));
 
     return Mesh(vertices, indices, faces, textures, meshInfo);  // 返回标准化网格对象
 }

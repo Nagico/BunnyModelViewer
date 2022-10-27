@@ -5,6 +5,7 @@
 #include <vector>
 #include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
+#include "glm/glm.hpp"
 
 using std::string;
 using std::vector;
@@ -44,7 +45,7 @@ struct MeshInfo
     glm::vec3 specular = glm::vec3(1);  // 材质的镜面反射系数
     glm::vec3 emission = glm::vec3(1);  // 材质的自发光系数
 
-    float maxDis = 0.0f; // 最大距离
+    glm::mat4 basisTransform = glm::mat4(1.0f);  // 基础变换矩阵
 };
 
 class ShaderProgram;

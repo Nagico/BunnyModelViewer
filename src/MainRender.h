@@ -77,7 +77,7 @@ private:
 
     glm::vec3 *m_lampPos;
 
-    const glm::vec4 *m_lineColor, *m_pointColor, *m_selectPointColor,
+    const glm::vec3 *m_lineColor, *m_pointColor, *m_selectPointColor,
             *m_selectTriangleColor, *m_highlightPointColor, *m_highlightTriangleColor;
 
     void initializeGL() override;

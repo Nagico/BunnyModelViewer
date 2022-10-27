@@ -15,6 +15,7 @@ public:
         unsigned int vao;
         vector<unsigned int> indices;
         vector<VertexData> vertices;
+        MeshInfo meshInfo;
     };
 
     Polygon();

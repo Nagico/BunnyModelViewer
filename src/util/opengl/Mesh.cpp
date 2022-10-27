@@ -23,7 +23,7 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::render(ShaderProgram *program, bool useMeshInfo)
+void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo)
 {
     size_t diffuseNum = 1;
     size_t specularNum = 1;
@@ -31,7 +31,7 @@ void Mesh::render(ShaderProgram *program, bool useMeshInfo)
     size_t heightNum = 1;
     size_t size = m_textures.size();
 
-    if (size == 0)
+    if (size == 0 && !forceColor)
     {
         program->setValue("hasTexture", false);
         program->setValue("modelColor", glm::vec3(0.8f));

@@ -65,7 +65,7 @@ public:
     ~Mesh();
 
 
-    void render(ShaderProgram *program, bool useMeshInfo = true);
+    void render(ShaderProgram *program,bool forceColor=false, bool useMeshInfo = true);
 
     [[nodiscard]] unsigned int getVao() const;
 

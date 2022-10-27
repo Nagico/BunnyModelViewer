@@ -8,7 +8,7 @@ struct Material {
 };
 
 struct Light {
-    vec3 position;
+    vec4 position;
 
     vec3 ambient;
     vec3 diffuse;
@@ -39,40 +39,77 @@ uniform vec3 modelColor;
 
 void main()
 {
-    float distance = length(light.position - FragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    if (light.position.w == 0.0) {  // directional light
+        // ambient
+        vec3 ambient;
+        if (hasTexture) {
+            ambient = texture(material.diffuse1, TexCoords).rgb * light.ambient;
+        } else {
+            ambient = modelColor * light.ambient;
+        }
 
-    // 环境光
-    vec3 ambient;
-    if (hasTexture) {
-        ambient = texture(material.diffuse1, TexCoords).rgb * light.ambient;
-    } else {
-        ambient = modelColor * light.ambient;
+        vec3 norm = normalize(Normal);
+        vec3 lightDir = normalize(light.position.xyz);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse;
+        if (hasTexture) {
+            diffuse = texture(material.diffuse1, TexCoords).rgb * diff * light.diffuse;
+        } else {
+            diffuse = modelColor * diff * light.diffuse;
+        }
+
+        // 镜面光
+        vec3 viewDir = normalize(viewPos - FragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        vec3 specular;
+        if (hasTexture) {
+            specular = texture(material.specular1, TexCoords).rgb * spec * light.specular;
+        } else {
+            specular = modelColor * spec * light.specular;
+        }
+
+        vec3 result = ambient + diffuse + specular;
+        FragColor = vec4(result, 1.0);
+    }
+    else
+    {
+        float distance = length(light.position.xyz - FragPos);
+        float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+        // 环境光
+        vec3 ambient;
+        if (hasTexture) {
+            ambient = texture(material.diffuse1, TexCoords).rgb * light.ambient;
+        } else {
+            ambient = modelColor * light.ambient;
+        }
+
+        // 漫反射
+        vec3 norm = normalize(Normal);
+        vec3 lightDir = normalize(light.position.xyz - FragPos);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse;
+        if (hasTexture) {
+            diffuse = texture(material.diffuse1, TexCoords).rgb * diff * light.diffuse;
+        } else {
+            diffuse = modelColor * diff * light.diffuse;
+        }
+
+        // 镜面光
+        vec3 viewDir = normalize(viewPos - FragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        vec3 specular;
+        if (hasTexture) {
+            specular = texture(material.specular1, TexCoords).rgb * spec * light.specular;
+        } else {
+            specular = modelColor * spec * light.specular;
+        }
+
+        vec3 result = (ambient + diffuse + specular) * attenuation;
+
+        FragColor = vec4(result, 1.0);
     }
 
-    // 漫反射
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse;
-    if (hasTexture) {
-        diffuse = texture(material.diffuse1, TexCoords).rgb * diff * light.diffuse;
-    } else {
-        diffuse = modelColor * diff * light.diffuse;
-    }
-
-    // 镜面光
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular;
-    if (hasTexture) {
-        specular = texture(material.specular1, TexCoords).rgb * spec * light.specular;
-    } else {
-        specular = modelColor * spec * light.specular;
-    }
-
-    vec3 result = (ambient + diffuse + specular) * attenuation;
-
-    FragColor = vec4(result, 1.0);
 }

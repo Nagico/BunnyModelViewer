@@ -26,15 +26,15 @@ MainRender::MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboar
     m_keyboard = keyboard;
 
     // 初始化色彩
-    m_lineColor = new glm::vec4(0.12156863f, 0.8862745f, 0.6039216f, 1.f);
-    m_pointColor = new glm::vec4(0.35686275f, 0.078431375f, 0.83137256f, 0.01f);
-    m_selectPointColor = new glm::vec4(0.05882353f, 0.73333335f, 0.8352941f, 1.f);
-    m_selectTriangleColor = new glm::vec4(0.82156863f, 0.0862745f, 0.2039216f, 1.f);
-    m_highlightPointColor = new glm::vec4(0.02156863f, 0.9862745f, 0.9039216f, 1.f);
-    m_highlightTriangleColor = new glm::vec4(0.6901961f, 0.14117648f, 0.8980392f, 1.f);
+    m_lineColor = new glm::vec3(0.12156863f, 0.8862745f, 0.6039216f);
+    m_pointColor = new glm::vec3(0.35686275f, 0.078431375f, 0.83137256f);
+    m_selectPointColor = new glm::vec3(0.05882353f, 0.73333335f, 0.8352941f);
+    m_selectTriangleColor = new glm::vec3(0.82156863f, 0.0862745f, 0.2039216f);
+    m_highlightPointColor = new glm::vec3(0.02156863f, 0.9862745f, 0.9039216f);
+    m_highlightTriangleColor = new glm::vec3(0.6901961f, 0.14117648f, 0.8980392f);
 
     // 初始化灯
-    m_lampPos = new glm::vec3(3.f, 5.f, 1.f);
+    m_lampPos = new glm::vec3(3.f, 8.f, 5.f);
     m_lampModelMatrix = glm::mat4(1.f);
     m_lampModelMatrix = glm::translate(m_lampModelMatrix, *m_lampPos);
     m_lampModelMatrix = glm::scale(m_lampModelMatrix, glm::vec3(.3f, .3f, .3f));
@@ -92,11 +92,11 @@ void MainRender::render(float deltaTime)
 
 void MainRender::renderHighlight() {
     m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("pureColor", *m_highlightPointColor);
+    m_modelColorShader.setValue("modelColor", *m_highlightPointColor);
     m_highlightPoint->render(-1.15f, 5.0f);
 
     m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("pureColor", *m_highlightTriangleColor);
+    m_modelColorShader.setValue("modelColor", *m_highlightTriangleColor);
     m_highlightTriangle->render(-1.25f);
 }
 
@@ -105,7 +105,7 @@ void MainRender::renderSelect() {
     {
         m_selectPoint->resetIndices(rayPicker->selectMeshIndex, rayPicker->selectPointIndex);
         m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-        m_modelColorShader.setValue("pureColor", *m_selectPointColor);
+        m_modelColorShader.setValue("modelColor", *m_selectPointColor);
         m_selectPoint->render(-1.1f, 5.0f);
 
     }
@@ -117,7 +117,7 @@ void MainRender::renderSelect() {
                 rayPicker->selectFaceIndex[1],
                 rayPicker->selectFaceIndex[2]);
         m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-        m_modelColorShader.setValue("pureColor", *m_selectTriangleColor);
+        m_modelColorShader.setValue("modelColor", *m_selectTriangleColor);
         m_selectTriangle->render(-1.1f);
     }
 }
@@ -126,7 +126,7 @@ void MainRender::renderFill() {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
     // don't forget to enable shader before setting uniforms
     m_modelShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelShader.setValue("lightPos", *m_lampPos);
+    m_modelShader.setValue("light.position", glm::vec4(m_lampPos->x, m_lampPos->y, m_lampPos->z, 1.f));
     m_modelShader.setValue("viewPos", m_camera->position);
 
     m_modelShader.setValue("light.ambient", 0.3f, 0.3f, 0.3f);
@@ -134,12 +134,12 @@ void MainRender::renderFill() {
     m_modelShader.setValue("light.specular", 1.0f, 1.0f, 1.0f);
 
     m_modelShader.setValue("light.constant", 1.0f);
-    m_modelShader.setValue("light.linear", 0.09f);
-    m_modelShader.setValue("light.quadratic", 0.032f);
+    m_modelShader.setValue("light.linear", 0.027f);
+    m_modelShader.setValue("light.quadratic", 0.0028f);
 
     m_modelShader.setValue("material.shininess", 64.0f);
 
-    m_model->render(&m_modelShader, false);
+    m_model->render(&m_modelShader);
 }
 
 void MainRender::renderLine() {
@@ -148,7 +148,7 @@ void MainRender::renderLine() {
     glLineWidth(1.0f);
     glPolygonOffset(-1.0f,-1.0f);//设置多边形偏移量
     m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("pureColor", *m_lineColor);
+    m_modelColorShader.setValue("modelColor", *m_lineColor);
     m_model->render(&m_modelColorShader);
     glDisable(GL_POLYGON_OFFSET_LINE);//关闭多边形偏移
 }
@@ -159,7 +159,7 @@ void MainRender::renderPoint() {
     glPolygonOffset(-1.5f,-1.5f);//设置多边形偏移量
     glPointSize(2.5f);
     m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("pureColor", *m_pointColor);
+    m_modelColorShader.setValue("modelColor", *m_pointColor);
     m_model->render(&m_modelColorShader);
     glDisable(GL_POLYGON_OFFSET_POINT);//关闭多边形偏移
 }

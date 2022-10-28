@@ -12,7 +12,8 @@ enum LightType {
     NONE,
     DIRECTIONAL_LIGHT,
     POINT_LIGHT,
-    SPOT_LIGHT
+    SPOT_LIGHT,
+    TORCH_LIGHT
 };
 
 class Light {

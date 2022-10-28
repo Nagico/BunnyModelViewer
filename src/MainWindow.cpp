@@ -140,6 +140,12 @@ void MainWindow::renderImGui() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    //gui模式控制 hover
+    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+        m_render->mode.gui = true;
+    if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && !m_mouse->state[MouseButton::LEFT])
+        m_render->mode.gui = false;
+
     // ImGui::ShowDemoWindow();
 
     {
@@ -253,7 +259,8 @@ void MainWindow::renderImGui() {
                         light.type == NONE ? "Disable" :
                         light.type == DIRECTIONAL_LIGHT ? "Directional" :
                         light.type == POINT_LIGHT ? "Point" :
-                        light.type == SPOT_LIGHT ? "Spot" : "";
+                        light.type == SPOT_LIGHT ? "Spot" :
+                        light.type == TORCH_LIGHT ? "Torch" : "";
 
                 auto lightTreeNode = [i, status] () {
                     bool open = ImGui::TreeNodeEx(("Light " + std::to_string(i) + " ").c_str(), i == 0 ? ImGuiTreeNodeFlags_DefaultOpen : 0);
@@ -263,7 +270,7 @@ void MainWindow::renderImGui() {
                 };
                 if (lightTreeNode()) {
                     imguiLightType[i] = light.type;
-                    ImGui::Combo("Type", &imguiLightType[i], "Disable\0Directional\0Point\0Spot\0\0");
+                    ImGui::Combo("Type", &imguiLightType[i], "Disable\0Directional\0Point\0Spot\0Torch\0");
                     if (imguiLightType[i] != light.type) {
                         light.type = static_cast<LightType>(imguiLightType[i]);
                         light.reset();
@@ -310,11 +317,26 @@ void MainWindow::renderImGui() {
                             ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.f, .1f);
                             ImGui::Text("Spotlight");
                             ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -5.f, 5.f);
-                            ImGui::DragFloat("CutOff", &light.cutOffDegree, 0.001f, 0.f, 20.f);
-                            ImGui::DragFloat("OuterCutOff", &light.outerCutOffDegree, 0.001f, 0.f, 20.f);
+                            ImGui::DragFloat("CutOff", &light.cutOffDegree, 0.005f, 0.f, 20.f);
+                            ImGui::DragFloat("OuterCutOff", &light.outerCutOffDegree, 0.005f, 0.f, 20.f);
                             if (ImGui::Button("Reset"))
                                 light.reset();
                             break;
+                        case TORCH_LIGHT:
+                            ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
+                            ImGui::Text("Phong Model");
+                            ImGui::DragFloat("Ambient", &light.ambientX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Diffuse", &light.diffuseX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Specular", &light.specularX, 0.001f, 0.f, 1.f);
+                            ImGui::Text("Attenuation");
+                            ImGui::DragFloat("Constant", &light.constant, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Linear", &light.linear, 0.001f, 0.f, .2f);
+                            ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.f, .1f);
+                            ImGui::Text("Spotlight");
+                            ImGui::DragFloat("CutOff", &light.cutOffDegree, 0.005f, 0.f, 20.f);
+                            ImGui::DragFloat("OuterCutOff", &light.outerCutOffDegree, 0.005f, 0.f, 20.f);
+                            if (ImGui::Button("Reset"))
+                                light.reset();
                         default:
                             break;
                     }

@@ -32,6 +32,7 @@ struct Light {
 #define DIR_LIGHT 1
 #define POINT_LIGHT 2
 #define SPOT_LIGHT 3
+#define TORCH_LIGHT 4
 
 
 in vec3 FragPos;
@@ -134,7 +135,7 @@ void main()
         else if (lights[i].type == POINT_LIGHT) {
             result += CalcPointLight(lights[i], norm, FragPos, viewDir, diffuseOriColor, specularOriColor);
         }
-        else if (lights[i].type == SPOT_LIGHT) {
+        else if (lights[i].type == SPOT_LIGHT || lights[i].type == TORCH_LIGHT) {
             result += CalcSpotLight(lights[i], norm, FragPos, viewDir, diffuseOriColor, specularOriColor);
         }
     }

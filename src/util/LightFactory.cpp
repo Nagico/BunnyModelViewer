@@ -85,5 +85,14 @@ void LightFactory::reset() {
     }
 }
 
+void LightFactory::refreshTorchLightPos(glm::vec3 pos, glm::vec3 direction) {
+    for (auto & light : lights) {
+        if (light->type == TORCH_LIGHT) {
+            light->position = pos;
+            light->direction = direction;
+        }
+    }
+}
+
 
 

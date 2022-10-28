@@ -34,6 +34,8 @@ public:
     void modelRender(ShaderProgram &shaderProgram, glm::mat4 &view, glm::mat4 &projection) const;
 
     void reset();
+
+    void refreshTorchLightPos(glm::vec3 pos, glm::vec3 direction);
 private:
     LightFactory();
 

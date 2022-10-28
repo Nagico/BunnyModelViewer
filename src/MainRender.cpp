@@ -68,6 +68,7 @@ void MainRender::render(float deltaTime)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_camera->updateCameraVectors();
+    lightFactory->refreshTorchLightPos(m_camera->position, m_camera->front);
 
     m_projectionMatrix = glm::perspective(
             glm::radians(m_camera->zoom),
@@ -406,7 +407,7 @@ void MainRender::initializeModeChangeEvent(EventHandler& handler) {
         mode.select = false;
     });
 
-    // gui模式控制
+    // gui模式控制 鼠标点击时
     handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::LEFT> &event){
         mode.gui = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     });

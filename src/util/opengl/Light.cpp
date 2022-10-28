@@ -27,6 +27,7 @@ void Light::importShaderValue(ShaderProgram &shaderProgram, int index) const {
             shaderProgram.setValue(lightStr + "direction", direction);
             break;
         case SPOT_LIGHT:
+        case TORCH_LIGHT:
             shaderProgram.setValue(lightStr + "direction", direction);
             shaderProgram.setValue(lightStr + "cutOff", cutOff);
             shaderProgram.setValue(lightStr + "outerCutOff", outerCutOff);
@@ -92,7 +93,7 @@ void Light::reset() {
         lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
         modelMatrix = lampModelMatrix;
         position = lampPos;
-        direction = glm::vec3(-0.844f, -1.649f, -0.769);
+        direction = glm::vec3(-0.844f, -1.649f, -0.769f);
         color = glm::vec3(0.911f, 0.433f, 0.151f);
         ambientX = 0.0f;
         diffuseX = 0.68f;
@@ -102,7 +103,26 @@ void Light::reset() {
         quadratic = 0.0028f;
         cutOffDegree = 13.309f;
         outerCutOffDegree = 17.64f;
-        isShowModel = true;
+        isShowModel = false;
+    }
+
+    if(type == TORCH_LIGHT) {
+        auto lampPos = glm::vec3(1.f, 1.f, 1.f);
+        auto lampModelMatrix = glm::translate(glm::mat4(1.f), lampPos);
+        lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+        modelMatrix = lampModelMatrix;
+        position = lampPos;
+        direction = glm::vec3(0.0f, 0.0f, -1.0f);
+        color = glm::vec3(0.911f, 0.433f, 0.151f);
+        ambientX = 0.0f;
+        diffuseX = 0.68f;
+        specularX = 1.0f;
+        constant = 1.0f;
+        linear = 0.027f;
+        quadratic = 0.0028f;
+        cutOffDegree = 13.309f;
+        outerCutOffDegree = 17.64f;
+        isShowModel = false;
     }
 
 }

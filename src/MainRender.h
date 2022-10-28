@@ -3,6 +3,8 @@
 #include "util/opengl/OpenGLRender.h"
 #include "util/opengl/ShaderProgram.h"
 #include "util/event/Event.h"
+#include "util/opengl/Light.h"
+#include "util/LightFactory.h"
 #include <glm/matrix.hpp>
 
 class Model;
@@ -40,16 +42,17 @@ public:
     void loadModel(const string &path);
     void unloadModel();
 
-    std::string getHighlightPointString() const&;
-    std::string getHighlightTriangleString() const&;
+    [[nodiscard]] std::string getHighlightPointString() const&;
+    [[nodiscard]] std::string getHighlightTriangleString() const&;
 
 
     bool modelLoaded;
     string modelName;
 
     RayPicker *rayPicker;
-
     Mode mode;
+
+    LightFactory *lightFactory;
 
     ModelTransform modelTransform;
 private:
@@ -74,14 +77,10 @@ private:
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
 
-    glm::mat4 m_lampModelMatrix;
-
     Camera *m_camera;
 
     Mouse *m_mouse;
     Keyboard *m_keyboard;
-
-    glm::vec3 *m_lampPos;
 
     const glm::vec3 *m_lineColor, *m_pointColor, *m_selectPointColor,
             *m_selectTriangleColor, *m_highlightPointColor, *m_highlightTriangleColor;
@@ -103,6 +102,8 @@ private:
     void renderPoint();
     void renderLamp();
     void updateModelMatrix();
+
+    void initializeLight();
 };
 
 #endif

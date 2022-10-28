@@ -35,12 +35,6 @@ MainRender::MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboar
     m_highlightPointColor = new glm::vec3(0.02156863f, 0.9862745f, 0.9039216f);
     m_highlightTriangleColor = new glm::vec3(0.6901961f, 0.14117648f, 0.8980392f);
 
-    // 初始化灯
-    m_lampPos = new glm::vec3(3.f, 8.f, 5.f);
-    m_lampModelMatrix = glm::mat4(1.f);
-    m_lampModelMatrix = glm::translate(m_lampModelMatrix, *m_lampPos);
-    m_lampModelMatrix = glm::scale(m_lampModelMatrix, glm::vec3(.3f, .3f, .3f));
-
     // 初始化矩阵
     m_projectionMatrix = glm::perspective(
             glm::radians(m_camera->zoom),
@@ -65,8 +59,6 @@ MainRender::~MainRender()
     delete m_selectTriangleColor;
     delete m_highlightPointColor;
     delete m_highlightTriangleColor;
-
-    delete m_lampPos;
 }
 
 void MainRender::render(float deltaTime)
@@ -131,18 +123,10 @@ void MainRender::renderFill() {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
     // don't forget to enable shader before setting uniforms
     m_modelShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelShader.setValue("light.position", glm::vec4(m_lampPos->x, m_lampPos->y, m_lampPos->z, 1.f));
     m_modelShader.setValue("viewPos", m_camera->position);
-
-    m_modelShader.setValue("light.ambient", 0.3f, 0.3f, 0.3f);
-    m_modelShader.setValue("light.diffuse", 0.5f, 0.5f, 0.5f);
-    m_modelShader.setValue("light.specular", 1.0f, 1.0f, 1.0f);
-
-    m_modelShader.setValue("light.constant", 1.0f);
-    m_modelShader.setValue("light.linear", 0.027f);
-    m_modelShader.setValue("light.quadratic", 0.0028f);
-
     m_modelShader.setValue("material.shininess", 64.0f);
+
+    lightFactory->importShaderValue(m_modelShader);
 
     m_model->render(&m_modelShader);
 }
@@ -170,11 +154,8 @@ void MainRender::renderPoint() {
 }
 
 void MainRender::renderLamp() {
-    m_lampShader.use();
-    m_lampShader.setValue("projection", m_projectionMatrix);
-    m_lampShader.setValue("view", m_viewMatrix);
-    m_lampShader.setValue("model", m_lampModelMatrix);
-    m_lampModel->render(&m_lampShader);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+    lightFactory->modelRender(m_lampShader, m_viewMatrix, m_projectionMatrix);
 }
 
 void MainRender::resizeGL(int w, int h)
@@ -188,6 +169,7 @@ void MainRender::resizeGL(int w, int h)
 void MainRender::initializeGL() {
     initializeShader();
     initializeModel();
+    initializeLight();
     initializeRayPicker();
 
     glEnable(GL_CULL_FACE);
@@ -496,4 +478,31 @@ std::string MainRender::getHighlightPointString() const& {
 
 std::string MainRender::getHighlightTriangleString() const &{
     return m_highlightTriangle->getIndicesString();
+}
+
+void MainRender::initializeLight() {
+    lightFactory = &LightFactory::get();
+
+    // 初始化灯
+    auto lampPos = glm::vec3(3.f, 8.f, 5.f);
+    auto lampModelMatrix = glm::mat4(1.f);
+    lampModelMatrix = glm::translate(lampModelMatrix, lampPos);
+    lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+
+    auto index = lightFactory->addLight(LightType::POINT_LIGHT);
+    auto &light = *(lightFactory->getLight(index));
+
+    light.model = m_lampModel;
+    light.modelMatrix = &lampModelMatrix;
+    light.position = lampPos;
+    light.direction = -lampPos;
+    light.color = glm::vec3(1.f, 1.f, 1.f);
+    light.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
+    light.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+    light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+    light.constant = 1.0f;
+    light.linear = 0.027f;
+    light.quadratic = 0.0028f;
+    light.isShowModel = true;
+
 }

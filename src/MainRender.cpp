@@ -155,6 +155,9 @@ void MainRender::renderPoint() {
 
 void MainRender::renderLamp() {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+//    m_lampShader.use(lightFactory->getLight(0)->modelMatrix, m_viewMatrix, m_projectionMatrix);
+//    m_lampShader.setValue("lightColor", lightFactory->getLight(0)->color);
+//    m_lampModel->render(&m_lampShader);
     lightFactory->modelRender(m_lampShader, m_viewMatrix, m_projectionMatrix);
 }
 
@@ -482,27 +485,7 @@ std::string MainRender::getHighlightTriangleString() const &{
 
 void MainRender::initializeLight() {
     lightFactory = &LightFactory::get();
-
-    // 初始化灯
-    auto lampPos = glm::vec3(3.f, 8.f, 5.f);
-    auto lampModelMatrix = glm::mat4(1.f);
-    lampModelMatrix = glm::translate(lampModelMatrix, lampPos);
-    lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
-
-    auto index = lightFactory->addLight(LightType::POINT_LIGHT);
-    auto &light = *(lightFactory->getLight(index));
-
-    light.model = m_lampModel;
-    light.modelMatrix = &lampModelMatrix;
-    light.position = lampPos;
-    light.direction = -lampPos;
-    light.color = glm::vec3(1.f, 1.f, 1.f);
-    light.ambient = glm::vec3(0.3f, 0.3f, 0.3f);
-    light.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
-    light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-    light.constant = 1.0f;
-    light.linear = 0.027f;
-    light.quadratic = 0.0028f;
-    light.isShowModel = true;
+    lightFactory->setBaseModel(m_lampModel);
+    lightFactory->reset();
 
 }

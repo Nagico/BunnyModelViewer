@@ -27,11 +27,17 @@ public:
 
     void deleteLight(int index);
 
+    void setBaseModel(Model *model);
+
     void importShaderValue(ShaderProgram &shaderProgram) const;
 
     void modelRender(ShaderProgram &shaderProgram, glm::mat4 &view, glm::mat4 &projection) const;
+
+    void reset();
 private:
     LightFactory();
+
+    Model *baseModel;
 
     Light *lights[MAX_LIGHT_NUM];
 };

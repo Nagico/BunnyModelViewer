@@ -3,6 +3,9 @@
 //
 
 #include "LightFactory.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
 
 Light *LightFactory::getLight(int index) const {
     if (index < 0 || index >= MAX_LIGHT_NUM) {
@@ -37,18 +40,20 @@ void LightFactory::deleteLight(int index) {
 
 void LightFactory::importShaderValue(ShaderProgram &shaderProgram) const {
     for (int i = 0; i < MAX_LIGHT_NUM; ++i) {
-        if (lights[i]->type != NONE) {
-            lights[i]->importShaderValue(shaderProgram, i);
-        }
+        lights[i]->importShaderValue(shaderProgram, i);
     }
 }
 
 void LightFactory::modelRender(ShaderProgram &shaderProgram, glm::mat4 &view, glm::mat4 &projection) const {
     for (auto light : lights) {
-        if (light->type != NONE) {
-            shaderProgram.use();
-            shaderProgram.setValue("view", view);
-            shaderProgram.setValue("projection", projection);
+        if (light->type != NONE && light->model != nullptr) {
+            auto pos = light->position;
+            if(light->type == DIRECTIONAL_LIGHT) {
+                pos = -light->direction;
+            }
+
+            auto model = glm::translate(light->modelMatrix, pos);
+            shaderProgram.use(model, view, projection);
             light->modelRender(shaderProgram);
         }
     }
@@ -63,6 +68,20 @@ LightFactory::LightFactory() {
 LightFactory::~LightFactory() {
     for (auto & light : lights) {
         delete light;
+    }
+}
+
+void LightFactory::setBaseModel(Model *model) {
+    baseModel = model;
+    for (auto & light : lights) {
+        light->model = model;
+    }
+}
+
+void LightFactory::reset() {
+    for (int i = 0; i < MAX_LIGHT_NUM; ++i) {
+        lights[i]->type = i == 0 ? DIRECTIONAL_LIGHT : NONE;
+        lights[i]->reset();
     }
 }
 

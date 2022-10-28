@@ -3,6 +3,9 @@
 //
 
 #include "Light.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
 
 Light::Light(LightType type) {
     this->type = type;
@@ -13,9 +16,11 @@ void Light::importShaderValue(ShaderProgram &shaderProgram, int index) const {
     string lightStr = "lights[" + std::to_string(index) + "].";
     shaderProgram.setValue(lightStr + "type", static_cast<int>(type));
     shaderProgram.setValue(lightStr + "color", color);
-    shaderProgram.setValue(lightStr + "ambient", ambient);
-    shaderProgram.setValue(lightStr + "diffuse", diffuse);
-    shaderProgram.setValue(lightStr + "specular", specular);
+    shaderProgram.setValue(lightStr + "ambient", glm::vec3(ambientX));
+    shaderProgram.setValue(lightStr + "diffuse", glm::vec3(diffuseX));
+    shaderProgram.setValue(lightStr + "specular", glm::vec3(specularX));
+    auto cutOff = glm::cos(glm::radians(cutOffDegree));
+    auto outerCutOff = glm::cos(glm::radians(outerCutOffDegree));
 
     switch (type) {
         case DIRECTIONAL_LIGHT:
@@ -39,20 +44,65 @@ void Light::importShaderValue(ShaderProgram &shaderProgram, int index) const {
 }
 
 void Light::modelRender(ShaderProgram &shaderProgram) const {
-    if (isShowModel && model != nullptr && modelMatrix != nullptr) {
-        shaderProgram.use();
-        shaderProgram.setValue("model", *modelMatrix);
+    if (isShowModel && model != nullptr) {
+        shaderProgram.setValue("lightColor", color);
         model->render(&shaderProgram);
     }
 }
 
-Light::Light(LightType type, Model *model, glm::mat4 *modelMatrix) {
-    this->type = type;
-    this->model = model;
-    this->modelMatrix = modelMatrix;
-
-}
-
 Light::Light() {
     type = NONE;
+}
+
+void Light::reset() {
+    // 初始化灯
+    if(type == DIRECTIONAL_LIGHT) {
+        auto lampPos = glm::vec3(5.f, 10.f, 10.f);
+        auto lampModelMatrix = glm::translate(glm::mat4(1.f), lampPos);
+        lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+        modelMatrix = lampModelMatrix;
+        direction = -lampPos;
+        color = glm::vec3(1.f, 1.f, 1.f);
+        ambientX = 0.25f;
+        diffuseX = 0.4f;
+        specularX = 1.0f;
+        isShowModel = true;
+    }
+
+    if (type == POINT_LIGHT) {
+        auto lampPos = glm::vec3(3.f, 8.f, 5.f);
+        auto lampModelMatrix = glm::translate(glm::mat4(1.f), lampPos);
+        lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+        modelMatrix = lampModelMatrix;
+        position = lampPos;
+        direction = -lampPos;
+        color = glm::vec3(1.f, 1.f, 1.f);
+        ambientX = 0.3f;
+        diffuseX = 0.5f;
+        specularX = 1.0f;
+        constant = 1.0f;
+        linear = 0.027f;
+        quadratic = 0.0028f;
+        isShowModel = true;
+    }
+
+    if (type == SPOT_LIGHT) {
+        auto lampPos = glm::vec3(1.f, 1.f, 1.f);
+        auto lampModelMatrix = glm::translate(glm::mat4(1.f), lampPos);
+        lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
+        modelMatrix = lampModelMatrix;
+        position = lampPos;
+        direction = glm::vec3(-1.260f, -1.259f, -0.744);
+        color = glm::vec3(1.f, 1.f, 1.f);
+        ambientX = 0.227f;
+        diffuseX = 0.68f;
+        specularX = 1.0f;
+        constant = 1.0f;
+        linear = 0.027f;
+        quadratic = 0.0028f;
+        cutOffDegree = 13.309f;
+        outerCutOffDegree = 17.64f;
+        isShowModel = true;
+    }
+
 }

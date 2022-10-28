@@ -141,7 +141,7 @@ void MainWindow::renderImGui() {
     ImGui::NewFrame();
 
     m_render->mode.gui = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     {
         ImGui::Begin("Control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -155,6 +155,7 @@ void MainWindow::renderImGui() {
                 ImGui::Checkbox("Line (L)", &m_render->mode.line);
                 ImGui::SameLine();
                 ImGui::Checkbox("Point (P)", &m_render->mode.point);
+                ImGui::Separator();
                 ImGui::SliderFloat3("Position", glm::value_ptr(m_render->modelTransform.position), -.5f, .5f);
                 ImGui::SliderFloat3("Rotate", glm::value_ptr(m_render->modelTransform.rotation), -3.1415f, 3.1415f);
                 ImGui::SliderFloat("Scale", &m_render->modelTransform.scale, 0.1f, 5.0f);
@@ -162,6 +163,8 @@ void MainWindow::renderImGui() {
                     m_render->resetModelMatrix();
                 }
             }
+
+            ImGui::Separator();
 
             if (ImGui::Button("Open Model")) {
                 auto path = openFile();
@@ -222,6 +225,7 @@ void MainWindow::renderImGui() {
 
         if (ImGui::BeginTabItem("Camera")) {
             ImGui::Checkbox("Camera Mode (C)", &m_render->mode.camera);
+            ImGui::Separator();
             ImGui::SliderFloat3("Position", glm::value_ptr(m_camera->position), -5.f, 5.f);
             ImGui::SliderFloat("Yaw", &m_camera->yaw, -180.f, 180.f);
             ImGui::SliderFloat("Pitch", &m_camera->pitch, -180.f, 180.f);
@@ -233,9 +237,95 @@ void MainWindow::renderImGui() {
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Light")) {
+            static int imguiLightType[MAX_LIGHT_NUM];
+
+            for (int i=0; i<MAX_LIGHT_NUM; i++) {
+                auto &light = *(m_render->lightFactory->getLight(i));
+                string status =
+                        light.type == NONE ? "Disable" :
+                        light.type == DIRECTIONAL_LIGHT ? "Directional" :
+                        light.type == POINT_LIGHT ? "Point" :
+                        light.type == SPOT_LIGHT ? "Spot" : "";
+
+                auto lightTreeNode = [i, status] () {
+                    bool open = ImGui::TreeNodeEx(("Light " + std::to_string(i) + " ").c_str(), i == 0 ? ImGuiTreeNodeFlags_DefaultOpen : 0);
+                    ImGui::SameLine();
+                    ImGui::Text("%s", status.c_str());
+                    return open;
+                };
+                if (lightTreeNode()) {
+                    imguiLightType[i] = light.type;
+                    ImGui::Combo("Type", &imguiLightType[i], "Disable\0Directional\0Point\0Spot\0\0");
+                    if (imguiLightType[i] != light.type) {
+                        light.type = static_cast<LightType>(imguiLightType[i]);
+                        light.reset();
+                    }
+
+                    switch (light.type) {
+                        case DIRECTIONAL_LIGHT:
+                            ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
+                            ImGui::SliderFloat3("Direction", glm::value_ptr(light.direction), -10.f, 10.f);
+                            ImGui::Checkbox("Show Model", &light.isShowModel);
+                            ImGui::Text("Phong Model");
+                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
+                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
+                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            if (ImGui::Button("Reset"))
+                                light.reset();
+                            break;
+                        case POINT_LIGHT:
+                            ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
+                            ImGui::SliderFloat3("Position", glm::value_ptr(light.position), -10.f, 10.f);
+                            ImGui::Checkbox("Show Model", &light.isShowModel);
+                            ImGui::Text("Phong Model");
+                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
+                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
+                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            ImGui::Text("Attenuation");
+                            ImGui::SliderFloat("Constant", &light.constant, 0.f, 1.f);
+                            ImGui::SliderFloat("Linear", &light.linear, 0.f, .2f);
+                            ImGui::SliderFloat("Quadratic", &light.quadratic, 0.f, .1f);
+                            if (ImGui::Button("Reset"))
+                                light.reset();
+                            break;
+                        case SPOT_LIGHT:
+                            ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
+                            ImGui::SliderFloat3("Position", glm::value_ptr(light.position), -10.f, 10.f);
+                            ImGui::Checkbox("Show Model", &light.isShowModel);
+                            ImGui::Text("Phong Model");
+                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
+                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
+                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            ImGui::Text("Attenuation");
+                            ImGui::SliderFloat("Constant", &light.constant, 0.f, 1.f);
+                            ImGui::SliderFloat("Linear", &light.linear, 0.f, .2f);
+                            ImGui::SliderFloat("Quadratic", &light.quadratic, 0.f, .1f);
+                            ImGui::Text("Spotlight");
+                            ImGui::SliderFloat3("Direction", glm::value_ptr(light.direction), -10.f, 10.f);
+                            ImGui::SliderFloat("CutOff", &light.cutOffDegree, 0.f, 20.f);
+                            ImGui::SliderFloat("OuterCutOff", &light.outerCutOffDegree, 0.f, 20.f);
+                            if (ImGui::Button("Reset"))
+                                light.reset();
+                            break;
+                        default:
+                            break;
+                    }
+                    ImGui::TreePop();
+                    ImGui::Separator();
+                }
+            }
+
+            if (ImGui::Button("Reset All"))
+                m_render->lightFactory->reset();
+
+            ImGui::EndTabItem();
+        }
+
         if (m_render->modelLoaded) {
             if (ImGui::BeginTabItem("Select")) {
                 ImGui::Checkbox("Select Mode (Ctrl)", &m_render->mode.select);
+                ImGui::Separator();
                 if(m_render->mode.select) {
                     ImGui::Text("Selected");
                     auto picker = m_render->rayPicker;

@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <Windows.h>
+#include <windef.h>
 
 MainWindow::MainWindow(int width, int height) : OpenGLWindow(width, height)
 {
@@ -132,8 +134,12 @@ void MainWindow::initializeImGui() {
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);
     ImGui_ImplOpenGL3_Init("#version 430 core");
 
+    HWND hd = GetDesktopWindow();
+    int zoom = GetDpiForWindow(hd);
+    ImGui::GetStyle().ScaleAllSizes(zoom / 96.0f);
+    auto fontSize = zoom / 96.0f * 15.0f;
     // font size
-    io.Fonts->AddFontFromFileTTF("assets/font/calibri.ttf", 18.0f);
+    io.Fonts->AddFontFromFileTTF("assets/font/calibri.ttf", fontSize);
 }
 
 void MainWindow::renderImGui() {

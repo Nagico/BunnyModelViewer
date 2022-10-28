@@ -405,6 +405,14 @@ void MainRender::initializeModeChangeEvent(EventHandler& handler) {
     handler.addListener([this](const event::Keyboard::KeyReleaseEvent<KeyboardKey::LEFT_CONTROL> &event){
         mode.select = false;
     });
+
+    // gui模式控制
+    handler.addListener([this](const event::Mouse::ClickHoldEvent<MouseButton::LEFT> &event){
+        mode.gui = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    });
+    handler.addListener([this](const event::Mouse::ClickReleaseEvent<MouseButton::LEFT> &event){
+        mode.gui = false;
+    });
 }
 
 void MainRender::loadModel(const string &path) {

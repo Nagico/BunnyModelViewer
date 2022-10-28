@@ -140,8 +140,7 @@ void MainWindow::renderImGui() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    m_render->mode.gui = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     {
         ImGui::Begin("Control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);

@@ -84,8 +84,10 @@ void MainWindow::initializeEvent() {
 }
 
 void MainWindow::resizeEvent(int width, int height) {
-    OpenGLWindow::resizeEvent(width, height);
-    m_render->resizeGL(width, height);
+    if (width != 0 || height != 0) {
+        OpenGLWindow::resizeEvent(width, height);
+        m_render->resizeGL(width, height);
+    }
 }
 
 void MainWindow::keyEvent(int key, int scancode, int action, int mods) {

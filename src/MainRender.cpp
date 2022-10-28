@@ -28,12 +28,12 @@ MainRender::MainRender(GLFWwindow *window, Camera *camera, Mouse *mouse, Keyboar
     m_keyboard = keyboard;
 
     // 初始化色彩
-    m_lineColor = new glm::vec3(0.12156863f, 0.8862745f, 0.6039216f);
-    m_pointColor = new glm::vec3(0.35686275f, 0.078431375f, 0.83137256f);
+    m_lineColor = new glm::vec3(0.359f, 0.749f, 0.605f);
+    m_pointColor = new glm::vec3(0.595f, 0.582f, 0.335f);
     m_selectPointColor = new glm::vec3(0.05882353f, 0.73333335f, 0.8352941f);
-    m_selectTriangleColor = new glm::vec3(0.82156863f, 0.0862745f, 0.2039216f);
+    m_selectTriangleColor = new glm::vec3(0.555f, 0.255f, 0.695f);
     m_highlightPointColor = new glm::vec3(0.02156863f, 0.9862745f, 0.9039216f);
-    m_highlightTriangleColor = new glm::vec3(0.6901961f, 0.14117648f, 0.8980392f);
+    m_highlightTriangleColor = new glm::vec3(0.804f, 0.097f, 0.961f);
 
     // 初始化矩阵
     m_projectionMatrix = glm::perspective(
@@ -64,7 +64,7 @@ MainRender::~MainRender()
 void MainRender::render(float deltaTime)
 {
     m_deltaTime = deltaTime;
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_camera->updateCameraVectors();
@@ -124,7 +124,7 @@ void MainRender::renderFill() {
     // don't forget to enable shader before setting uniforms
     m_modelShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
     m_modelShader.setValue("viewPos", m_camera->position);
-    m_modelShader.setValue("material.shininess", 64.0f);
+    m_modelShader.setValue("material.shininess", defaultShininess);
 
     lightFactory->importShaderValue(m_modelShader);
 
@@ -439,6 +439,8 @@ void MainRender::loadModel(const string &path) {
     m_selectTriangle = new PolygonTriangle(m_model->meshes);
     m_highlightPoint = new PolygonPoint(m_model->meshes);
     m_highlightTriangle = new PolygonTriangle(m_model->meshes);
+
+    defaultShininess = m_model->meshes[0].getMeshInfo().valid ? m_model->meshes[0].getMeshInfo().shininess : 32.0f;
 
     // 重置模型矩阵
     resetModelMatrix();

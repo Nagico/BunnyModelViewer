@@ -59,18 +59,6 @@ void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo)
         program->setValue(("material." + name).c_str(), (int)i);
     }
 
-    if (m_meshInfo.valid && useMeshInfo)
-    {
-        program->setValue("material.shininess", m_meshInfo.shininess);
-        program->setValue("material.dissolve", m_meshInfo.dissolve);
-        program->setValue("material.refractiveIndex", m_meshInfo.refractiveIndex);
-        program->setValue("material.illum", m_meshInfo.illum);
-        program->setValue("light.ambient", m_meshInfo.ambient);
-        program->setValue("light.diffuse", m_meshInfo.diffuse);
-        program->setValue("light.specular", m_meshInfo.specular);
-        program->setValue("light.emission", m_meshInfo.emission);
-    }
-
     glBindVertexArray(m_vao);  // 绑定VAO
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, nullptr);  // 绘制网格
     glBindVertexArray(0);  // 解绑VAO

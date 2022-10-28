@@ -49,12 +49,19 @@ public:
     bool modelLoaded;
     string modelName;
 
+    glm::vec3 backgroundColor = glm::vec3(0.6f);
+
     RayPicker *rayPicker;
     Mode mode;
 
     LightFactory *lightFactory;
 
     ModelTransform modelTransform;
+
+    glm::vec3 *m_lineColor, *m_pointColor, *m_selectPointColor,
+        *m_selectTriangleColor, *m_highlightPointColor, *m_highlightTriangleColor;
+
+    float defaultShininess = 32.0f;
 private:
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
@@ -81,9 +88,6 @@ private:
 
     Mouse *m_mouse;
     Keyboard *m_keyboard;
-
-    const glm::vec3 *m_lineColor, *m_pointColor, *m_selectPointColor,
-            *m_selectTriangleColor, *m_highlightPointColor, *m_highlightTriangleColor;
 
     void initializeGL() override;
     void initializeShader() override;

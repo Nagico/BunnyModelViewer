@@ -63,8 +63,8 @@ void Light::reset() {
         modelMatrix = lampModelMatrix;
         direction = -lampPos;
         color = glm::vec3(1.f, 1.f, 1.f);
-        ambientX = 0.25f;
-        diffuseX = 0.4f;
+        ambientX = 0.085f;
+        diffuseX = 0.28f;
         specularX = 1.0f;
         isShowModel = true;
     }
@@ -92,9 +92,9 @@ void Light::reset() {
         lampModelMatrix = glm::scale(lampModelMatrix, glm::vec3(.3f, .3f, .3f));
         modelMatrix = lampModelMatrix;
         position = lampPos;
-        direction = glm::vec3(-1.260f, -1.259f, -0.744);
-        color = glm::vec3(1.f, 1.f, 1.f);
-        ambientX = 0.227f;
+        direction = glm::vec3(-0.844f, -1.649f, -0.769);
+        color = glm::vec3(0.911f, 0.433f, 0.151f);
+        ambientX = 0.0f;
         diffuseX = 0.68f;
         specularX = 1.0f;
         constant = 1.0f;

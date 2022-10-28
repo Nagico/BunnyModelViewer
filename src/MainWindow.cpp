@@ -156,13 +156,21 @@ void MainWindow::renderImGui() {
                 ImGui::SameLine();
                 ImGui::Checkbox("Point (P)", &m_render->mode.point);
                 ImGui::Separator();
-                ImGui::SliderFloat3("Position", glm::value_ptr(m_render->modelTransform.position), -.5f, .5f);
-                ImGui::SliderFloat3("Rotate", glm::value_ptr(m_render->modelTransform.rotation), -3.1415f, 3.1415f);
-                ImGui::SliderFloat("Scale", &m_render->modelTransform.scale, 0.1f, 5.0f);
+                ImGui::DragFloat3("Position", glm::value_ptr(m_render->modelTransform.position), 0.005f, -20.f, 20.f);
+                ImGui::DragFloat3("Rotate", glm::value_ptr(m_render->modelTransform.rotation), 0.005f, -3.1415f, 3.1415f);
+                ImGui::DragFloat("Scale", &m_render->modelTransform.scale, 0.01f, 0.1f, 5.0f);
+                ImGui::Separator();
+                ImGui::DragFloat("shininess", &m_render->defaultShininess, 0.1f, 0.0f, 100.0f);
                 if (ImGui::Button("Reset")) {
                     m_render->resetModelMatrix();
                 }
             }
+
+            ImGui::Separator();
+
+            ImGui::ColorEdit3("Background", glm::value_ptr(m_render->backgroundColor));
+            ImGui::ColorEdit3("Line Color", glm::value_ptr(*m_render->m_lineColor));
+            ImGui::ColorEdit3("Point Color", glm::value_ptr(*m_render->m_pointColor));
 
             ImGui::Separator();
 
@@ -226,10 +234,10 @@ void MainWindow::renderImGui() {
         if (ImGui::BeginTabItem("Camera")) {
             ImGui::Checkbox("Camera Mode (C)", &m_render->mode.camera);
             ImGui::Separator();
-            ImGui::SliderFloat3("Position", glm::value_ptr(m_camera->position), -5.f, 5.f);
-            ImGui::SliderFloat("Yaw", &m_camera->yaw, -180.f, 180.f);
-            ImGui::SliderFloat("Pitch", &m_camera->pitch, -180.f, 180.f);
-            ImGui::SliderFloat("Zoom", &m_camera->zoom, 1.f, 90.f);
+            ImGui::DragFloat3("Position", glm::value_ptr(m_camera->position), 0.005f, -5.f, 5.f);
+            ImGui::DragFloat("Yaw", &m_camera->yaw, 0.1f, -180.f, 180.f);
+            ImGui::DragFloat("Pitch", &m_camera->pitch, 0.1f, -180.f, 180.f);
+            ImGui::DragFloat("Zoom", &m_camera->zoom, 0.05f, 1.f, 90.f);
 
             if (ImGui::Button("Reset")) {
                 m_camera->reset();
@@ -265,46 +273,46 @@ void MainWindow::renderImGui() {
                     switch (light.type) {
                         case DIRECTIONAL_LIGHT:
                             ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
-                            ImGui::SliderFloat3("Direction", glm::value_ptr(light.direction), -10.f, 10.f);
+                            ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -10.f, 10.f);
                             ImGui::Checkbox("Show Model", &light.isShowModel);
                             ImGui::Text("Phong Model");
-                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
-                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
-                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            ImGui::DragFloat("Ambient", &light.ambientX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Diffuse", &light.diffuseX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Specular", &light.specularX, 0.001f, 0.f, 1.f);
                             if (ImGui::Button("Reset"))
                                 light.reset();
                             break;
                         case POINT_LIGHT:
                             ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
-                            ImGui::SliderFloat3("Position", glm::value_ptr(light.position), -10.f, 10.f);
+                            ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -10.f, 10.f);
                             ImGui::Checkbox("Show Model", &light.isShowModel);
                             ImGui::Text("Phong Model");
-                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
-                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
-                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            ImGui::DragFloat("Ambient", &light.ambientX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Diffuse", &light.diffuseX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Specular", &light.specularX, 0.001f, 0.f, 1.f);
                             ImGui::Text("Attenuation");
-                            ImGui::SliderFloat("Constant", &light.constant, 0.f, 1.f);
-                            ImGui::SliderFloat("Linear", &light.linear, 0.f, .2f);
-                            ImGui::SliderFloat("Quadratic", &light.quadratic, 0.f, .1f);
+                            ImGui::DragFloat("Constant", &light.constant, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Linear", &light.linear, 0.001f, 0.f, .2f);
+                            ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.f, .1f);
                             if (ImGui::Button("Reset"))
                                 light.reset();
                             break;
                         case SPOT_LIGHT:
                             ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
-                            ImGui::SliderFloat3("Position", glm::value_ptr(light.position), -10.f, 10.f);
+                            ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -10.f, 10.f);
                             ImGui::Checkbox("Show Model", &light.isShowModel);
                             ImGui::Text("Phong Model");
-                            ImGui::SliderFloat("Ambient", &light.ambientX, 0.f, 1.f);
-                            ImGui::SliderFloat("Diffuse", &light.diffuseX, 0.f, 1.f);
-                            ImGui::SliderFloat("Specular", &light.specularX, 0.f, 1.f);
+                            ImGui::DragFloat("Ambient", &light.ambientX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Diffuse", &light.diffuseX, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Specular", &light.specularX, 0.001f, 0.f, 1.f);
                             ImGui::Text("Attenuation");
-                            ImGui::SliderFloat("Constant", &light.constant, 0.f, 1.f);
-                            ImGui::SliderFloat("Linear", &light.linear, 0.f, .2f);
-                            ImGui::SliderFloat("Quadratic", &light.quadratic, 0.f, .1f);
+                            ImGui::DragFloat("Constant", &light.constant, 0.001f, 0.f, 1.f);
+                            ImGui::DragFloat("Linear", &light.linear, 0.001f, 0.f, .2f);
+                            ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.f, .1f);
                             ImGui::Text("Spotlight");
-                            ImGui::SliderFloat3("Direction", glm::value_ptr(light.direction), -10.f, 10.f);
-                            ImGui::SliderFloat("CutOff", &light.cutOffDegree, 0.f, 20.f);
-                            ImGui::SliderFloat("OuterCutOff", &light.outerCutOffDegree, 0.f, 20.f);
+                            ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.01f, -5.f, 5.f);
+                            ImGui::DragFloat("CutOff", &light.cutOffDegree, 0.001f, 0.f, 20.f);
+                            ImGui::DragFloat("OuterCutOff", &light.outerCutOffDegree, 0.001f, 0.f, 20.f);
                             if (ImGui::Button("Reset"))
                                 light.reset();
                             break;
@@ -325,6 +333,8 @@ void MainWindow::renderImGui() {
         if (m_render->modelLoaded) {
             if (ImGui::BeginTabItem("Select")) {
                 ImGui::Checkbox("Select Mode (Ctrl)", &m_render->mode.select);
+                ImGui::ColorEdit3("Point Color", glm::value_ptr(*m_render->m_selectPointColor));
+                ImGui::ColorEdit3("Face Color", glm::value_ptr(*m_render->m_selectTriangleColor));
                 ImGui::Separator();
                 if(m_render->mode.select) {
                     ImGui::Text("Selected");
@@ -353,8 +363,11 @@ void MainWindow::renderImGui() {
 
             if (ImGui::BeginTabItem("HighLight")) {
                 ImGui::Text("Points");
+                ImGui::ColorEdit3("Point Color", glm::value_ptr(*m_render->m_highlightPointColor));
                 ImGui::Text("%s", m_render->getHighlightPointString().c_str());
+                ImGui::Separator();
                 ImGui::Text("Triangles");
+                ImGui::ColorEdit3("Face Color", glm::value_ptr(*m_render->m_highlightTriangleColor));
                 ImGui::Text("%s", m_render->getHighlightTriangleString().c_str());
                 ImGui::EndTabItem();
             }

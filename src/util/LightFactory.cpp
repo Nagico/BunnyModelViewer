@@ -80,7 +80,7 @@ void LightFactory::setBaseModel(Model *model) {
 
 void LightFactory::reset() {
     for (int i = 0; i < MAX_LIGHT_NUM; ++i) {
-        lights[i]->type = i == 0 ? DIRECTIONAL_LIGHT : NONE;
+        lights[i]->type = i == 0 ? POINT_LIGHT : NONE;
         lights[i]->reset();
     }
 }

@@ -84,7 +84,7 @@ void MainRender::render(float deltaTime)
     updateModelMatrix();
 
     if (modelLoaded) {
-        renderShadow();
+        renderShadow(0);
 
         renderHighlight(m_modelColorShader);
         if (mode.select) renderSelect(m_modelColorShader);
@@ -96,20 +96,27 @@ void MainRender::render(float deltaTime)
     if (mode.lamp) renderLamp(m_lampShader);
 }
 
-void MainRender::renderShadow() {
+void MainRender::renderShadow(int lightIndex) {
     // 渲染深度贴图
-    glm::mat4 lightProjection, lightView;
-    lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NEAR_PLANE, FAR_PLANE);
-    lightView = glm::lookAt(lightFactory->getLight(0)->position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    m_lightSpaceMatrix = lightProjection * lightView;
+    glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+    std::vector<glm::mat4> shadowTransforms;
+    auto lightPos = lightFactory->getLight(lightIndex)->position;
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+    shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
     // render scene from light's point of view
-    m_shadowShader.use();
-    m_shadowShader.setValue("lightSpaceMatrix", m_lightSpaceMatrix);
     glCullFace(GL_FRONT);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFbo);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
+    m_shadowShader.use();
+    for (unsigned int i = 0; i < 6; ++i)
+        m_shadowShader.setValue("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+    m_shadowShader.setValue("far_plane", FAR_PLANE);
+    m_shadowShader.setValue("lightPos", lightPos);
     renderFill(m_shadowShader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glCullFace(GL_BACK);
@@ -157,6 +164,7 @@ void MainRender::renderFill(ShaderProgram &shader) {
     shader.setValue("viewPos", m_camera->position);
     shader.setValue("material.shininess", defaultShininess);
     shader.setValue("lightSpaceMatrix", m_lightSpaceMatrix);
+    shader.setValue("far_plane", FAR_PLANE);
     lightFactory->importShaderValue(shader);
 
 
@@ -218,17 +226,17 @@ void MainRender::initializeShadow() {
     glGenFramebuffers(1, &m_depthMapFbo);
     // 创建2D纹理
     glGenTextures(1, &m_depthMap);
-    glBindTexture(GL_TEXTURE_2D, m_depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_depthMap);
+    for (unsigned int i = 0; i < 6; ++i)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     // 深度纹理作为帧缓冲的深度缓冲
     glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depthMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -252,7 +260,7 @@ void MainRender::initializeShader() {
         }
 #pragma omp section
         {
-            m_shadowShader.load("assets/shader/depth_shadow_vertex.glsl", "assets/shader/depth_shadow_fragment.glsl");
+            m_shadowShader.load("assets/shader/depth_shadow_vertex.glsl", "assets/shader/depth_shadow_fragment.glsl", "assets/shader/depth_shadow_geometry.glsl");
         }
     }
 }

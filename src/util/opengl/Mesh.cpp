@@ -61,7 +61,7 @@ void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo, uns
 
     if (depthMap != -1) {
         glActiveTexture(GL_TEXTURE0 + size);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
         program->setValue("shadowMap", (int)size);
     }
 

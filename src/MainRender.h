@@ -65,7 +65,7 @@ public:
 private:
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
-    static constexpr unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    static constexpr unsigned int SHADOW_WIDTH = 8192, SHADOW_HEIGHT = 8192;
 
     GLFWwindow *m_window;
     int m_width, m_height;
@@ -93,8 +93,7 @@ private:
 
     unsigned int m_depthMapFbo;
     unsigned int m_depthMap;
-    unsigned int m_depthDebugModeVao = 0;
-    unsigned int m_depthDebugModeVbo;
+
 
     void initializeGL() override;
     void initializeShader() override;
@@ -118,9 +117,7 @@ private:
 
     void initializeShadow();
 
-    void renderDepthDebug();
-
-    void renderShadow();
+    void renderShadow(int lightIndex);
 };
 
 #endif

@@ -33,9 +33,12 @@ void Controller::initialize(GLFWwindow *window) {
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430 core");
-
+#ifdef _MSVC
     auto hd = GetDesktopWindow();
     auto zoom = GetDpiForWindow(hd);
+#else
+    auto zoom = 96 * 1.5;
+#endif
     ImGui::GetStyle().ScaleAllSizes(zoom / 96.0f);
     auto fontSize = zoom / 96.0f * 15.0f;
     // font size

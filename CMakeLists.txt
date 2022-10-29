@@ -18,6 +18,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES 
     if(${CMAKE_CXX_COMPILER} MATCHES "MSVC")
         add_compile_definitions(_AMD64_)
         add_compile_definitions(_WINDOWS)
+        add_compile_definitions(_MSVC)
         link_directories(dependencies/lib/msvc_x64)
         add_custom_command( OUTPUT COPY_ASSIMP
                 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/dependencies/lib/msvc_x64/assimp-vc143-mt.lib ${CMAKE_BINARY_DIR}
@@ -26,6 +27,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES 
                 )
     elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
         link_directories(dependencies/lib/mingw_x64)
+        add_compile_definitions(_MINGW64)
         add_custom_command( OUTPUT COPY_ASSIMP
                 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/dependencies/lib/mingw_x64/libassimp.a ${CMAKE_BINARY_DIR}
                 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/dependencies/lib/mingw_x64/libassimp-5.dll ${CMAKE_BINARY_DIR}

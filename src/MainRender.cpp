@@ -81,9 +81,9 @@ void MainRender::render(float deltaTime)
 //             -5.f * m_height / m_width / 2.0f, 5.f * m_height / m_width / 2.0f,
 //             NEAR_PLANE, FAR_PLANE);
     m_viewMatrix = m_camera->GetViewMatrix();
-    updateModelMatrix();
 
     if (modelLoaded) {
+        updateModelMatrix();
         renderShadow(0);
 
         renderHighlight(m_modelColorShader);

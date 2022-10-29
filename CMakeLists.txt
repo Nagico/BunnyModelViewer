@@ -98,7 +98,7 @@ add_executable(
         src/util/nfd/nfd_common.h
         src/util/nfd/nfd_win.cpp
         src/util/nfd/simple_exec.h
-        src/util/opengl/Light.cpp src/util/opengl/Light.h src/util/LightFactory.cpp src/util/LightFactory.h)
+        src/util/opengl/Light.cpp src/util/opengl/Light.h src/util/LightFactory.cpp src/util/LightFactory.h src/util/Controller.cpp src/util/Controller.h)
 
 target_compile_options(model-viewer
         PRIVATE

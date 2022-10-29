@@ -158,7 +158,7 @@ void MainRender::renderLamp() {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 //    m_lampShader.use(lightFactory->getLight(0)->modelMatrix, m_viewMatrix, m_projectionMatrix);
 //    m_lampShader.setValue("lightColor", lightFactory->getLight(0)->color);
-//    m_lampModel->render(&m_lampShader);
+//    m_lampModel->prepareRender(&m_lampShader);
     lightFactory->modelRender(m_lampShader, m_viewMatrix, m_projectionMatrix);
 }
 

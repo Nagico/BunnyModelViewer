@@ -9,6 +9,7 @@ class Camera;
 class MainRender;
 class Mouse;
 class Keyboard;
+class Controller;
 
 class MainWindow : public OpenGLWindow
 {
@@ -16,8 +17,7 @@ public:
     MainWindow(int width = 800, int height = 600);
     ~MainWindow() override;
 
-    bool loadModel(const string &path);
-    bool unloadModel();
+    void load(const std::string &path);
 
 protected:
     void render(float deltaTime) override;
@@ -28,24 +28,14 @@ protected:
     void mouseButtonEvent(int button, int action, int mods) override;
 
 private:
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
     Camera *m_camera;
     Mouse *m_mouse;
     Keyboard *m_keyboard;
-
     MainRender *m_render;
+    Controller *m_controller;
 
     void initializeEvent();
-
     void refreshTitle();
-
-    void initializeImGui();
-
-    void renderImGui();
-
-    string openFile() const&;
 };
 
 #endif

@@ -22,10 +22,10 @@ Model::~Model()
 
 /// 渲染模型
 /// \param program 着色器对象
-void Model::render(ShaderProgram *program,bool forceColor, bool useMeshInfo)
+void Model::render(ShaderProgram *program, bool forceColor, bool useMeshInfo, unsigned int depthMap)
 {
     for (auto it : meshes)
-        it.render(program, forceColor, useMeshInfo);
+        it.render(program, forceColor, useMeshInfo, depthMap);
 }
 
 /// 从文件中加载模型

@@ -23,7 +23,7 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo)
+void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo, unsigned int depthMap)
 {
     size_t diffuseNum = 1;
     size_t specularNum = 1;
@@ -57,6 +57,12 @@ void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo)
             name += std::to_string(heightNum++);
 
         program->setValue(("material." + name).c_str(), (int)i);
+    }
+
+    if (depthMap != -1) {
+        glActiveTexture(GL_TEXTURE0 + size);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        program->setValue("shadowMap", (int)size);
     }
 
     glBindVertexArray(m_vao);  // 绑定VAO

@@ -65,6 +65,7 @@ public:
 private:
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
+    static constexpr unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
     GLFWwindow *m_window;
     int m_width, m_height;
@@ -78,16 +79,22 @@ private:
     PolygonTriangle *m_selectTriangle;
 
     ShaderProgram m_modelShader, m_modelColorShader;
-    ShaderProgram m_lampShader;
+    ShaderProgram m_lampShader, m_shadowShader;
 
     glm::mat4 m_modelMatrix;
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
+    glm::mat4 m_lightSpaceMatrix;
 
     Camera *m_camera;
 
     Mouse *m_mouse;
     Keyboard *m_keyboard;
+
+    unsigned int m_depthMapFbo;
+    unsigned int m_depthMap;
+    unsigned int m_depthDebugModeVao = 0;
+    unsigned int m_depthDebugModeVbo;
 
     void initializeGL() override;
     void initializeShader() override;
@@ -99,15 +106,21 @@ private:
     void initializeCameraEvent(EventHandler &handler);
     void initializeModelEvent(EventHandler &handler);
     void initializeModeChangeEvent(EventHandler &handler);
-    void renderHighlight();
-    void renderSelect();
-    void renderFill();
-    void renderLine();
-    void renderPoint();
-    void renderLamp();
+    void renderHighlight(ShaderProgram &shader);
+    void renderSelect(ShaderProgram &shader);
+    void renderFill(ShaderProgram &shader);
+    void renderLine(ShaderProgram &shader);
+    void renderPoint(ShaderProgram &shader);
+    void renderLamp(ShaderProgram &shader);
     void updateModelMatrix();
 
     void initializeLight();
+
+    void initializeShadow();
+
+    void renderDepthDebug();
+
+    void renderShadow();
 };
 
 #endif

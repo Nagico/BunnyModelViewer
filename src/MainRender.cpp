@@ -70,40 +70,70 @@ void MainRender::render(float deltaTime)
     m_camera->updateCameraVectors();
     lightFactory->refreshTorchLightPos(m_camera->position, m_camera->front);
 
+    // 透视投影
     m_projectionMatrix = glm::perspective(
             glm::radians(m_camera->zoom),
             (float)m_width / (float)m_height,
             NEAR_PLANE, FAR_PLANE);
+    // 正交投影
+//     m_projectionMatrix = glm::ortho(
+//             -5.f / 2.0f, 5.f / 2.0f,
+//             -5.f * m_height / m_width / 2.0f, 5.f * m_height / m_width / 2.0f,
+//             NEAR_PLANE, FAR_PLANE);
     m_viewMatrix = m_camera->GetViewMatrix();
     updateModelMatrix();
 
     if (modelLoaded) {
-        renderHighlight();
-        if (mode.select) renderSelect();
-        if (mode.fill) renderFill();
-        if (mode.line) renderLine();
-        if (mode.point) renderPoint();
+        renderShadow();
+
+        renderHighlight(m_modelColorShader);
+        if (mode.select) renderSelect(m_modelColorShader);
+        if (mode.fill) renderFill(m_modelShader);
+        if (mode.line) renderLine(m_modelColorShader);
+        if (mode.point) renderPoint(m_modelColorShader);
     }
 
-    if (mode.lamp) renderLamp();
+    if (mode.lamp) renderLamp(m_lampShader);
 }
 
-void MainRender::renderHighlight() {
-    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("modelColor", *m_highlightPointColor);
+void MainRender::renderShadow() {
+    // 渲染深度贴图
+    glm::mat4 lightProjection, lightView;
+    lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NEAR_PLANE, FAR_PLANE);
+    lightView = glm::lookAt(lightFactory->getLight(0)->position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    m_lightSpaceMatrix = lightProjection * lightView;
+    // render scene from light's point of view
+    m_shadowShader.use();
+    m_shadowShader.setValue("lightSpaceMatrix", m_lightSpaceMatrix);
+    glCullFace(GL_FRONT);
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFbo);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
+    renderFill(m_shadowShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glCullFace(GL_BACK);
+    // reset viewport
+    glViewport(0, 0, m_width, m_height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void MainRender::renderHighlight(ShaderProgram &shader) {
+    shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    shader.setValue("modelColor", *m_highlightPointColor);
     m_highlightPoint->render(-1.15f, 5.0f);
 
-    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("modelColor", *m_highlightTriangleColor);
+    shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    shader.setValue("modelColor", *m_highlightTriangleColor);
     m_highlightTriangle->render(-1.25f);
 }
 
-void MainRender::renderSelect() {
+void MainRender::renderSelect(ShaderProgram &shader) {
     if (rayPicker->selectPointValid)
     {
         m_selectPoint->resetIndices(rayPicker->selectMeshIndex, rayPicker->selectPointIndex);
-        m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-        m_modelColorShader.setValue("modelColor", *m_selectPointColor);
+        shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+        shader.setValue("modelColor", *m_selectPointColor);
         m_selectPoint->render(-1.1f, 5.0f);
 
     }
@@ -114,52 +144,53 @@ void MainRender::renderSelect() {
                 rayPicker->selectFaceIndex[0],
                 rayPicker->selectFaceIndex[1],
                 rayPicker->selectFaceIndex[2]);
-        m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-        m_modelColorShader.setValue("modelColor", *m_selectTriangleColor);
+        shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+        shader.setValue("modelColor", *m_selectTriangleColor);
         m_selectTriangle->render(-1.1f);
     }
 }
 
-void MainRender::renderFill() {
+void MainRender::renderFill(ShaderProgram &shader) {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);//设置绘制模型为绘制前面与背面模型，以填充的方式绘制
     // don't forget to enable shader before setting uniforms
-    m_modelShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelShader.setValue("viewPos", m_camera->position);
-    m_modelShader.setValue("material.shininess", defaultShininess);
+    shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    shader.setValue("viewPos", m_camera->position);
+    shader.setValue("material.shininess", defaultShininess);
+    shader.setValue("lightSpaceMatrix", m_lightSpaceMatrix);
+    lightFactory->importShaderValue(shader);
 
-    lightFactory->importShaderValue(m_modelShader);
 
-    m_model->render(&m_modelShader);
+    m_model->render(&shader, false, false, m_depthMap);
 }
 
-void MainRender::renderLine() {
+void MainRender::renderLine(ShaderProgram &shader) {
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);//将绘制模式改为线
     glEnable(GL_POLYGON_OFFSET_LINE);//开启多边形偏移
     glLineWidth(1.0f);
     glPolygonOffset(-1.0f,-1.0f);//设置多边形偏移量
-    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("modelColor", *m_lineColor);
-    m_model->render(&m_modelColorShader);
+    shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    shader.setValue("modelColor", *m_lineColor);
+    m_model->render(&shader);
     glDisable(GL_POLYGON_OFFSET_LINE);//关闭多边形偏移
 }
 
-void MainRender::renderPoint() {
+void MainRender::renderPoint(ShaderProgram &shader) {
     glPolygonMode(GL_FRONT_AND_BACK,GL_POINT);//将绘制模式改为点
     glEnable(GL_POLYGON_OFFSET_POINT);//开启多边形偏移
     glPolygonOffset(-1.5f,-1.5f);//设置多边形偏移量
     glPointSize(2.5f);
-    m_modelColorShader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
-    m_modelColorShader.setValue("modelColor", *m_pointColor);
-    m_model->render(&m_modelColorShader);
+    shader.use(m_modelMatrix, m_viewMatrix, m_projectionMatrix);
+    shader.setValue("modelColor", *m_pointColor);
+    m_model->render(&shader);
     glDisable(GL_POLYGON_OFFSET_POINT);//关闭多边形偏移
 }
 
-void MainRender::renderLamp() {
+void MainRender::renderLamp(ShaderProgram &shader) {
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 //    m_lampShader.use(lightFactory->getLight(0)->modelMatrix, m_viewMatrix, m_projectionMatrix);
 //    m_lampShader.setValue("lightColor", lightFactory->getLight(0)->color);
 //    m_lampModel->prepareRender(&m_lampShader);
-    lightFactory->modelRender(m_lampShader, m_viewMatrix, m_projectionMatrix);
+    lightFactory->modelRender(shader, m_viewMatrix, m_projectionMatrix);
 }
 
 void MainRender::resizeGL(int w, int h)
@@ -175,10 +206,32 @@ void MainRender::initializeGL() {
     initializeModel();
     initializeLight();
     initializeRayPicker();
+    initializeShadow();
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+}
+
+void MainRender::initializeShadow() {
+    // 深度贴图帧缓冲对象
+    glGenFramebuffers(1, &m_depthMapFbo);
+    // 创建2D纹理
+    glGenTextures(1, &m_depthMap);
+    glBindTexture(GL_TEXTURE_2D, m_depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // 深度纹理作为帧缓冲的深度缓冲
+    glBindFramebuffer(GL_FRAMEBUFFER, m_depthMapFbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void MainRender::initializeShader() {
@@ -196,6 +249,10 @@ void MainRender::initializeShader() {
 #pragma omp section
         {
             m_lampShader.load("assets/shader/lamp_vertex.glsl", "assets/shader/lamp_fragment.glsl");
+        }
+#pragma omp section
+        {
+            m_shadowShader.load("assets/shader/depth_shadow_vertex.glsl", "assets/shader/depth_shadow_fragment.glsl");
         }
     }
 }

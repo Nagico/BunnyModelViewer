@@ -38,7 +38,6 @@ struct Light {
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
-in vec4 FragPosLightSpace;
 
 uniform vec3 viewPos;
 uniform Material material;
@@ -51,7 +50,7 @@ uniform float far_plane;
 vec3 CalcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 diffuseColor, vec3 specularColor);
 vec3 CalcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 diffuseColor, vec3 specularColor);
 vec3 CalcSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 diffuseColor, vec3 specularColor);
-float ShadowCalculation(Light light);
+float ShadowCalculation(Light light, vec3 fragPos);
 
 // array of offset direction for sampling
 vec3 gridSamplingDisk[20] = vec3[]
@@ -107,20 +106,20 @@ vec3 CalcDirLight(Light light, vec3 normal, vec3 viewDir, vec3 diffuseColor, vec
     vec3 diffuse  = light.diffuse  * light.color * diff * diffuseColor;
     vec3 specular = light.specular * spec * specularColor;
     // 阴影
-    float shadow = ShadowCalculation(light);
-    return ambient + (1.0 - min(shadow, 0.75)) * (diffuse + specular);
+    float shadow = ShadowCalculation(light, FragPos);
+    return ambient + (1.0f - min(shadow, 0.75f)) * (diffuse + specular);
 }
 
 vec3 CalcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 diffuseColor, vec3 specularColor) {
     vec3 lightDir = normalize(light.position - fragPos);
     // 漫反射着色
-    float diff = max(dot(normal, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0f);
     // 镜面光着色
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0f), material.shininess);
     // 衰减
     float distance    = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance +
+    float attenuation = 1.0f / (light.constant + light.linear * distance +
     light.quadratic * (distance * distance));
     // 合并结果
     vec3 ambient  = light.ambient  * diffuseColor;
@@ -130,25 +129,25 @@ vec3 CalcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 d
     diffuse  *= attenuation;
     specular *= attenuation;
     // 阴影
-    float shadow = ShadowCalculation(light);
-    return ambient + (1.0 - min(shadow, 0.75)) * (diffuse + specular);
+    float shadow = ShadowCalculation(light, fragPos);
+    return ambient + (1.0f - min(shadow, 0.75f)) * (diffuse + specular);
 }
 
 vec3 CalcSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 diffuseColor, vec3 specularColor) {
     vec3 lightDir = normalize(light.position - fragPos);
     // 漫反射着色
-    float diff = max(dot(normal, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0f);
     // 镜面光着色
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0f), material.shininess);
     // 衰减
     float distance    = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance +
+    float attenuation = 1.0f / (light.constant + light.linear * distance +
     light.quadratic * (distance * distance));
     // 聚光
     float theta = dot(lightDir, normalize(-light.direction));
     float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f);
     // 合并结果
     vec3 ambient  = light.ambient  * diffuseColor;
     vec3 diffuse  = light.diffuse  * light.color * diff * diffuseColor;
@@ -157,33 +156,49 @@ vec3 CalcSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 di
     diffuse  *= attenuation * intensity;
     specular *= attenuation * intensity;
     // 阴影
-    float shadow = ShadowCalculation(light);
-    return ambient + (1.0 - min(shadow, 0.75)) * (diffuse + specular);
+    float shadow = ShadowCalculation(light, fragPos);
+    return ambient + (1.0f - min(shadow, 0.75f)) * (diffuse + specular);
 }
 
-float ShadowCalculation(Light light)
+float ShadowCalculation(Light light, vec3 fragPos)
 {
-    if (light != lights[0])
-        return 0;
-    vec3 fragToLight = FragPos - light.position;
+    vec3 fragToLight = fragPos - light.position;
     float currentDepth = length(fragToLight);
 
     vec3 normal = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
-    float bias = max(0.00020 * (1.0 - dot(normal, lightDir)), 0.00001);
+    vec3 lightDir = normalize(light.position - fragPos);
+    float bias = max(0.020f * (1.0f - dot(normal, lightDir)), 0.001f);
 
-    float shadow = 0.0;
+    float shadow = 0.0f;
     int samples = 20;
     float viewDistance = length(viewPos - FragPos);
-    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;
     for(int i = 0; i < samples; ++i)
     {
         float closestDepth = texture(shadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
         closestDepth *= far_plane;   // undo mapping [0;1]
-        if(currentDepth - bias > closestDepth)
-        shadow += 1.0;
+        if(currentDepth - bias > closestDepth){
+            shadow += 1.0f;
+        }
     }
     shadow /= float(samples);
 
     return shadow;
 }
+
+//float ShadowCalculation(Light light, vec3 fragPos)
+//{
+//    // Get vector between fragment position and light position
+//    vec3 fragToLight = fragPos - light.position;
+//    // Use the light to fragment vector to sample from the depth map
+//    float closestDepth = texture(shadowMap, fragToLight).r;
+//    // It is currently in linear range between [0,1]. Re-transform back to original value
+//    closestDepth *= far_plane;
+//    // Now get current linear depth as the length between the fragment and light position
+//    float currentDepth = length(fragToLight);
+//    // Now test for shadows
+//    float bias = 0.00005;
+//    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+//
+//    return shadow;
+//}

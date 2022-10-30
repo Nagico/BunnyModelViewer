@@ -84,11 +84,10 @@ void MainRender::render(float deltaTime)
 
     if (modelLoaded) {
         updateModelMatrix();
-        renderShadow(0);
 
         renderHighlight(m_modelColorShader);
         if (mode.select) renderSelect(m_modelColorShader);
-        if (mode.fill) renderFill(m_modelShader);
+        if (mode.fill) { renderShadow(0); renderFill(m_modelShader); }
         if (mode.line) renderLine(m_modelColorShader);
         if (mode.point) renderPoint(m_modelColorShader);
     }

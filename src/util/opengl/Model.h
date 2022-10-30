@@ -14,7 +14,7 @@ public:
     explicit Model(const string &path);
     ~Model();
 
-    void render(ShaderProgram *program, bool forceColor=false, bool useMeshInfo = true, unsigned int depthMap = -1);
+    void render(ShaderProgram *program, bool forceColor=false, bool useMeshInfo = true, unsigned int depthMap = 0xffffffff);
 
     /// 基础变换矩阵
     glm::mat4 basisTransform = glm::mat4(1.0f);

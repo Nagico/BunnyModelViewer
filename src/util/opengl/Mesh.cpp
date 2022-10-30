@@ -59,10 +59,13 @@ void Mesh::render(ShaderProgram *program, bool forceColor, bool useMeshInfo, uns
         program->setValue(("material." + name).c_str(), (int)i);
     }
 
-    if (depthMap != -1) {
-        glActiveTexture(GL_TEXTURE0 + size);
+    if (depthMap != 0xffffffff) {
+        glActiveTexture(GL_TEXTURE0 + 31);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
-        program->setValue("shadowMap", (int)size);
+        program->setValue("shadowMap", 31);
+        program->setValue("shadowEnable", true);
+    } else {
+        program->setValue("shadowEnable", false);
     }
 
     glBindVertexArray(m_vao);  // 绑定VAO

@@ -84,10 +84,15 @@ void MainRender::render(float deltaTime)
 
     if (modelLoaded) {
         updateModelMatrix();
+        if (mode.fill) {
+            renderShadow(0);
+        }
 
         renderHighlight(m_modelColorShader);
         if (mode.select) renderSelect(m_modelColorShader);
-        if (mode.fill) { renderShadow(0); renderFill(m_modelShader); }
+        if (mode.fill) {
+            renderFill(m_modelShader);
+        }
         if (mode.line) renderLine(m_modelColorShader);
         if (mode.point) renderPoint(m_modelColorShader);
     }
@@ -488,6 +493,8 @@ void MainRender::loadModel(const string &path) {
         delete m_highlightPoint;
         delete m_highlightTriangle;
 
+        glDeleteFramebuffers(1, &m_depthMapFbo);
+
         modelLoaded = false;
     }
 
@@ -518,6 +525,8 @@ void MainRender::loadModel(const string &path) {
     // 重置模型矩阵
     resetModelMatrix();
     m_camera->reset();
+
+    initializeShadow();
 
     modelLoaded = true;
 }

@@ -65,7 +65,7 @@ public:
     ~Mesh();
 
 
-    void render(ShaderProgram *program,bool forceColor=false, bool useMeshInfo = true, unsigned int depthMap = -1);
+    void render(ShaderProgram *program,bool forceColor=false, bool useMeshInfo = true, unsigned int depthMap = 0xffffffff);
 
     [[nodiscard]] unsigned int getVao() const;
 

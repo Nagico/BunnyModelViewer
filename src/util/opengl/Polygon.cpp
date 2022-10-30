@@ -17,7 +17,10 @@ Polygon::Polygon(const vector<Mesh>& meshes) {
 
 void Polygon::render(float offset, float size) {
     glPolygonOffset(offset, offset);
-    glPointSize(size);
+    if (size > 0.f)
+    {
+        glPointSize(size);
+    }
 
     for (auto &mesh : m_meshes) {
         glBindVertexArray(mesh.vao);

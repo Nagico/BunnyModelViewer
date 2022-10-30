@@ -174,7 +174,7 @@ float ShadowCalculation(Light light, vec3 fragPos)
     float shadowValue = 0.0f;
     int samples = 20;
     float viewDistance = length(viewPos - FragPos);
-    float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;
+    float diskRadius = (1.f + (viewDistance / far_plane)) / 150.0f;
     for(int i = 0; i < samples; ++i)
     {
         float closestDepth = texture(shadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;

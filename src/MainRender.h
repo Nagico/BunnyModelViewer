@@ -65,7 +65,7 @@ public:
 private:
     static constexpr float NEAR_PLANE = 0.1f;
     static constexpr float FAR_PLANE = 1000.f;
-    static constexpr unsigned int SHADOW_WIDTH = 8192, SHADOW_HEIGHT = 8192;
+    static constexpr unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 
     GLFWwindow *m_window;
     int m_width, m_height;

@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/random.hpp>
+#include <filesystem>
 
 
 /// 从文件中加载模型
@@ -29,11 +30,11 @@ void Model::render(ShaderProgram *program, bool forceColor, bool useMeshInfo, un
 }
 
 /// 从文件中加载模型
-/// \param path 路径
-void Model::loadModel(const string &path)
+/// \param modelPath 路径
+void Model::loadModel(const string &modelPath)
 {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path,
+    const aiScene *scene = importer.ReadFile(modelPath,
                                              aiProcess_Triangulate |   // 将所有多边形转换为三角形
                                              aiProcess_FlipUVs |    // 翻转纹理y轴坐标
                                              aiProcess_GenNormals |   // 生成法线
@@ -57,7 +58,7 @@ void Model::loadModel(const string &path)
         // std::cerr << importer.GetErrorString() << std::endl;
         throw std::runtime_error(importer.GetErrorString());
     }
-    m_directory = path.substr(0, path.find_last_of("//"));  // 获取模型所在目录
+    m_directory = std::filesystem::path(modelPath).parent_path().string();  // 获取模型所在目录
     processNode(scene->mRootNode, scene);  // 递归处理节点
 
     glm::vec3 maxVertex = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);

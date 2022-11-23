@@ -23,7 +23,7 @@ public:
     vector<Mesh> meshes;
 
 private:
-    void loadModel(const string &path);
+    void loadModel(const string &modelPath);
     void processNode(aiNode *node, const aiScene *scene);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene);
     vector<Texture> loadMaterialTextures(aiMaterial *material, aiTextureType type, const string &name);
